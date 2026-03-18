@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { Character, AbilityId, GameSystem } from '../types'
 import { getGameSystem, getDefaultGameSystem } from '../../game-systems'
 import * as api from '../lib/api'
+import { withRetry } from '../lib/retry'
 
 interface CharacterListItem {
   id: string
@@ -26,6 +27,9 @@ interface CharacterStore {
   // Save status for UI feedback
   saveStatus: 'idle' | 'saving' | 'saved' | 'error'
   saveError: string | null
+  // Character loading state
+  characterLoading: boolean
+  characterError: string | null
 
   // Character list actions
   loadCharacterList: () => Promise<void>
@@ -106,10 +110,12 @@ export const useCharacterStore = create<CharacterStore>((set, get) => ({
   isDirty: false,
   saveStatus: 'idle',
   saveError: null,
+  characterLoading: false,
+  characterError: null,
 
   loadCharacterList: async () => {
     try {
-      const list = await api.listCharacters()
+      const list = await withRetry(() => api.listCharacters())
       const summaries: CharacterListItem[] = list.map((c) => ({
         id: c.id,
         name: c.name || 'Unnamed Character',
@@ -130,49 +136,61 @@ export const useCharacterStore = create<CharacterStore>((set, get) => ({
     const id = uuidv4()
     const character = gameSystem.createBlankCharacter(id)
     set({ character, isDirty: true, saveStatus: 'saving', saveError: null })
-    // Fire-and-forget: don't block navigation. Auto-save interval will retry if this fails.
-    withTimeout(api.saveCharacter(character), 10000).then(() => {
+    try {
+      // Block until save completes — don't navigate to unsaved character
+      await withRetry(() => withTimeout(api.saveCharacter(character), 10000))
       set({ isDirty: false, saveStatus: 'saved', saveError: null })
       setTimeout(() => {
         const { saveStatus } = get()
         if (saveStatus === 'saved') set({ saveStatus: 'idle' })
       }, 3000)
-    }).catch((err) => {
+    } catch (err) {
       console.error('Failed to save new character:', err)
       set({ saveStatus: 'error', saveError: err instanceof Error ? err.message : 'Save failed' })
-    })
+    }
     return id
   },
 
   loadCharacter: async (id: string) => {
-    const data = await api.loadCharacter(id)
-    const system = getGameSystem(data.gameSystemId) ?? getDefaultGameSystem()
+    set({ characterLoading: true, characterError: null })
+    try {
+      const data = await withRetry(() => api.loadCharacter(id))
+      const system = getGameSystem(data.gameSystemId) ?? getDefaultGameSystem()
 
-    // Migration: fill defaults for any missing live-play fields (old saves)
-    const migrated: Character = {
-      ...data,
-      campaignId: data.campaignId ?? null,
-      currentHP: data.currentHP ?? 0,
-      tempHP: data.tempHP ?? 0,
-      xp: data.xp ?? 0,
-      heroPoints: data.heroPoints ?? 1,
-      conditions: data.conditions ?? [],
-      spellSlotsUsed: data.spellSlotsUsed ?? {},
-      focusPointsUsed: data.focusPointsUsed ?? 0,
-      portraitBase64: data.portraitBase64 ?? '',
-      sessionNotes: data.sessionNotes ?? ''
+      // Migration: fill defaults for any missing live-play fields (old saves)
+      const migrated: Character = {
+        ...data,
+        campaignId: data.campaignId ?? null,
+        currentHP: data.currentHP ?? 0,
+        tempHP: data.tempHP ?? 0,
+        xp: data.xp ?? 0,
+        heroPoints: data.heroPoints ?? 1,
+        conditions: data.conditions ?? [],
+        spellSlotsUsed: data.spellSlotsUsed ?? {},
+        focusPointsUsed: data.focusPointsUsed ?? 0,
+        portraitBase64: data.portraitBase64 ?? '',
+        sessionNotes: data.sessionNotes ?? ''
+      }
+
+      // If currentHP is 0 and character has been built, initialize to maxHP
+      if (migrated.currentHP === 0 && migrated.classId && migrated.ancestryId) {
+        migrated.currentHP = system.calculateHP(migrated)
+      }
+
+      set({
+        character: migrated,
+        gameSystem: system,
+        isDirty: false,
+        characterLoading: false,
+        characterError: null
+      })
+    } catch (err) {
+      console.error('Failed to load character:', err)
+      set({
+        characterLoading: false,
+        characterError: err instanceof Error ? err.message : 'Failed to load character'
+      })
     }
-
-    // If currentHP is 0 and character has been built, initialize to maxHP
-    if (migrated.currentHP === 0 && migrated.classId && migrated.ancestryId) {
-      migrated.currentHP = system.calculateHP(migrated)
-    }
-
-    set({
-      character: migrated,
-      gameSystem: system,
-      isDirty: false
-    })
   },
 
   saveCharacter: async () => {

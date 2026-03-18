@@ -4,6 +4,7 @@ import { CampaignShop, ShopInventoryItem, Character } from '../types'
 import * as shopApi from '../lib/shopApi'
 import * as api from '../lib/api'
 import { getGameSystem, getDefaultGameSystem } from '../../game-systems'
+import { withRetry } from '../lib/retry'
 
 interface ShopStore {
   shops: CampaignShop[]
@@ -35,7 +36,7 @@ export const useShopStore = create<ShopStore>((set, get) => ({
   loadShops: async (campaignId) => {
     set({ loading: true })
     try {
-      const shops = await shopApi.loadShops(campaignId)
+      const shops = await withRetry(() => shopApi.loadShops(campaignId))
       set({ shops, loading: false })
     } catch (err) {
       console.error('Failed to load shops:', err)
@@ -156,11 +157,11 @@ export const useShopStore = create<ShopStore>((set, get) => ({
 
     const newGold = character.goldRemaining - totalCost
 
-    // Save character changes using targeted update
-    await api.saveDMEdits(character.id, {
+    // Save character changes using targeted update (with retry for transient failures)
+    await withRetry(() => api.saveDMEdits(character.id, {
       goldRemaining: newGold,
       purchasedEquipment: newEquipment,
-    })
+    }))
 
     const updatedChar: Character = {
       ...character,
@@ -209,11 +210,11 @@ export const useShopStore = create<ShopStore>((set, get) => ({
 
     const newGold = character.goldRemaining + sellPrice
 
-    // Save character changes using targeted update
-    await api.saveDMEdits(character.id, {
+    // Save character changes using targeted update (with retry for transient failures)
+    await withRetry(() => api.saveDMEdits(character.id, {
       goldRemaining: newGold,
       purchasedEquipment: newEquipment,
-    })
+    }))
 
     return {
       ...character,

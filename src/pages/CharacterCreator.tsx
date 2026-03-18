@@ -26,13 +26,11 @@ import { SummaryTab } from '../components/tabs/SummaryTab'
 export function CharacterCreator(): JSX.Element {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { character, loadCharacter, saveCharacter, gameSystem, isDirty, saveStatus, saveError } = useCharacterStore()
+  const { character, loadCharacter, saveCharacter, gameSystem, isDirty, saveStatus, saveError, characterLoading, characterError } = useCharacterStore()
 
   useEffect(() => {
     if (id && character?.id !== id) {
-      loadCharacter(id).catch((err) => {
-        console.error('Failed to load character:', err)
-      })
+      loadCharacter(id)
     }
   }, [id, character?.id, loadCharacter])
 
@@ -65,7 +63,36 @@ export function CharacterCreator(): JSX.Element {
     navigate('/')
   }, [navigate])
 
-  if (!character) {
+  if (characterError) {
+    return (
+      <Container py="xl">
+        <Stack align="center" gap="md">
+          <Text style={{ color: '#e85d5d', fontFamily: '"Cinzel", serif' }}>
+            Failed to load character
+          </Text>
+          <Text size="sm" style={{ color: '#8b7355' }}>{characterError}</Text>
+          <Group>
+            <Button
+              variant="outline"
+              color="yellow"
+              onClick={() => id && loadCharacter(id)}
+            >
+              Retry
+            </Button>
+            <Button
+              variant="subtle"
+              color="gray"
+              onClick={() => navigate('/')}
+            >
+              Back to Home
+            </Button>
+          </Group>
+        </Stack>
+      </Container>
+    )
+  }
+
+  if (!character || characterLoading) {
     return (
       <Container py="xl">
         <Text style={{ color: '#c4a96a', fontFamily: '"Cinzel", serif' }}>

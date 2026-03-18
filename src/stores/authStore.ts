@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { supabase } from '../lib/supabase'
-import type { User } from '@supabase/supabase-js'
+import type { User, Subscription } from '@supabase/supabase-js'
 
 interface Profile {
   id: string
@@ -21,6 +21,9 @@ interface AuthStore {
   clearError: () => void
 }
 
+// Module-level ref to prevent stacking listeners on re-renders
+let authSubscription: Subscription | null = null
+
 export const useAuthStore = create<AuthStore>((set, get) => ({
   user: null,
   profile: null,
@@ -29,7 +32,19 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
   initialize: async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession()
+      // Clean up any existing auth listener before creating a new one
+      if (authSubscription) {
+        authSubscription.unsubscribe()
+        authSubscription = null
+      }
+
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+      if (sessionError) {
+        console.error('Failed to get session:', sessionError)
+        set({ loading: false })
+        return
+      }
+
       if (session?.user) {
         const profile = await fetchProfile(session.user.id)
         set({ user: session.user, profile, loading: false })
@@ -37,16 +52,24 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         set({ loading: false })
       }
 
-      // Listen for auth changes
-      supabase.auth.onAuthStateChange(async (_event, session) => {
+      // Listen for auth changes — store subscription to prevent leaks
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
         if (session?.user) {
-          const profile = await fetchProfile(session.user.id)
+          // Wrap in try/catch so profile failure doesn't null a valid user
+          let profile: Profile | null = null
+          try {
+            profile = await fetchProfile(session.user.id)
+          } catch (err) {
+            console.error('Failed to fetch profile on auth change:', err)
+          }
           set({ user: session.user, profile })
         } else {
           set({ user: null, profile: null })
         }
       })
-    } catch {
+      authSubscription = subscription
+    } catch (err) {
+      console.error('Auth initialization failed:', err)
       set({ loading: false })
     }
   },
@@ -82,10 +105,19 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 }))
 
 async function fetchProfile(userId: string): Promise<Profile | null> {
-  const { data } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', userId)
-    .single()
-  return data as Profile | null
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single()
+    if (error) {
+      console.error('Profile fetch error:', error)
+      return null
+    }
+    return data as Profile | null
+  } catch (err) {
+    console.error('Profile fetch exception:', err)
+    return null
+  }
 }

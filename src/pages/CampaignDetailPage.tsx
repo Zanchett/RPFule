@@ -18,7 +18,8 @@ export function CampaignDetailPage(): JSX.Element {
   const user = useAuthStore((s) => s.user)
   const {
     currentCampaign, members, campaignCharacters, inviteCode, loading,
-    loadCampaignDetail, generateInviteCode, removeMember, leaveCampaign, updateCampaign
+    loadCampaignDetail, generateInviteCode, removeMember, leaveCampaign, updateCampaign,
+    subscribeToCampaign
   } = useCampaignStore()
 
   const [editing, setEditing] = useState(false)
@@ -29,8 +30,12 @@ export function CampaignDetailPage(): JSX.Element {
   const isDM = currentCampaign?.dmUserId === user?.id
 
   useEffect(() => {
-    if (id) loadCampaignDetail(id)
-  }, [id, loadCampaignDetail])
+    if (!id) return
+    loadCampaignDetail(id)
+    // Subscribe to real-time campaign changes (members joining/leaving, characters assigned)
+    const unsubscribe = subscribeToCampaign(id)
+    return () => { unsubscribe() }
+  }, [id, loadCampaignDetail, subscribeToCampaign])
 
   useEffect(() => {
     if (currentCampaign) {
