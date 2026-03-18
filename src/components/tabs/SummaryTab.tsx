@@ -9,6 +9,7 @@ import {
   Group,
   Alert,
   Table,
+  Tabs,
   Button,
   ActionIcon,
   NumberInput,
@@ -790,27 +791,92 @@ export function SummaryTab(): JSX.Element {
             Gold: {(character.goldRemaining / 100).toFixed(1)} gp
           </Badge>
         </Group>
-        {character.purchasedEquipment.length > 0 ? (
-          <Table>
-            <Table.Thead>
-              <Table.Tr>
-                <Table.Th>Item</Table.Th>
-                <Table.Th>Qty</Table.Th>
-              </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-              {character.purchasedEquipment.map((p) => {
-                const item = allEquipment.find((e) => e.id === p.itemId)
+        {character.purchasedEquipment.length > 0 ? (() => {
+          const itemsWithData = character.purchasedEquipment
+            .map((p) => ({ ...p, item: allEquipment.find((e) => e.id === p.itemId) }))
+            .filter((p) => p.item)
+          const categoryOrder: { key: string; label: string }[] = [
+            { key: 'weapon', label: 'Weapons' },
+            { key: 'armor', label: 'Armor' },
+            { key: 'shield', label: 'Shields' },
+            { key: 'gear', label: 'Gear' },
+            { key: 'kit', label: 'Kits' },
+            { key: 'tool', label: 'Tools' },
+            { key: 'potion', label: 'Potions' },
+            { key: 'scroll', label: 'Scrolls' },
+            { key: 'wand', label: 'Wands' },
+            { key: 'consumable', label: 'Consumables' },
+            { key: 'worn', label: 'Worn Items' },
+            { key: 'held', label: 'Held Items' },
+            { key: 'talisman', label: 'Talismans' },
+          ]
+          const populatedCategories = categoryOrder.filter((cat) =>
+            itemsWithData.some((i) => i.item!.category === cat.key)
+          )
+          return (
+            <Tabs defaultValue={populatedCategories[0]?.key}>
+              <Tabs.List mb="sm" style={{ flexWrap: 'wrap' }}>
+                {populatedCategories.map((cat) => (
+                  <Tabs.Tab key={cat.key} value={cat.key} style={{ fontSize: '0.8rem' }}>
+                    {cat.label}
+                  </Tabs.Tab>
+                ))}
+              </Tabs.List>
+              {populatedCategories.map((cat) => {
+                const catItems = itemsWithData.filter((i) => i.item!.category === cat.key)
                 return (
-                  <Table.Tr key={p.itemId}>
-                    <Table.Td>{item?.name ?? p.itemId}</Table.Td>
-                    <Table.Td>{p.quantity}</Table.Td>
-                  </Table.Tr>
+                  <Tabs.Panel key={cat.key} value={cat.key}>
+                    <Table>
+                      <Table.Thead>
+                        <Table.Tr>
+                          <Table.Th style={{ color: '#8b7355' }}>Item</Table.Th>
+                          <Table.Th style={{ color: '#8b7355' }}>Qty</Table.Th>
+                        </Table.Tr>
+                      </Table.Thead>
+                      <Table.Tbody>
+                        {catItems.map((p) => (
+                          <Table.Tr key={p.itemId}>
+                            <Table.Td>
+                              <Stack gap={0}>
+                                <Text size="sm" fw={500} style={{ color: '#e8d5a3' }}>{p.item!.name}</Text>
+                                {p.item!.damage && (
+                                  <Text size="xs" style={{ color: '#5c4a35' }}>
+                                    {p.item!.damage} {p.item!.damageType}
+                                    {p.item!.traits && p.item!.traits.length > 0 && ` (${p.item!.traits.join(', ')})`}
+                                    {p.item!.range && ` - Range ${p.item!.range} ft`}
+                                  </Text>
+                                )}
+                                {p.item!.acBonus !== undefined && (
+                                  <Text size="xs" style={{ color: '#5c4a35' }}>
+                                    AC +{p.item!.acBonus}
+                                    {p.item!.dexCap !== undefined && `, Dex Cap +${p.item!.dexCap}`}
+                                    {p.item!.checkPenalty ? `, Check Penalty ${p.item!.checkPenalty}` : ''}
+                                    {p.item!.speedPenalty ? `, Speed Penalty −${Math.abs(p.item!.speedPenalty)} ft` : ''}
+                                  </Text>
+                                )}
+                                {p.item!.effect && !p.item!.damage && p.item!.acBonus === undefined && (
+                                  <Text size="xs" style={{ color: '#5c4a35' }}>{p.item!.effect}</Text>
+                                )}
+                                {p.item!.rarity && p.item!.rarity !== 'common' && (
+                                  <Badge size="xs" variant="outline" color={p.item!.rarity === 'rare' ? 'blue' : p.item!.rarity === 'unique' ? 'grape' : 'yellow'} mt={2}>
+                                    {p.item!.rarity}
+                                  </Badge>
+                                )}
+                              </Stack>
+                            </Table.Td>
+                            <Table.Td>
+                              <Text size="sm" style={{ color: '#c4a96a' }}>{p.quantity}</Text>
+                            </Table.Td>
+                          </Table.Tr>
+                        ))}
+                      </Table.Tbody>
+                    </Table>
+                  </Tabs.Panel>
                 )
               })}
-            </Table.Tbody>
-          </Table>
-        ) : (
+            </Tabs>
+          )
+        })() : (
           <Text size="sm" style={{ color: '#5c4a35' }}>No equipment purchased yet.</Text>
         )}
       </Box>
