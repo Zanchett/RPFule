@@ -35,7 +35,8 @@ export const useCampaignStore = create<CampaignStore>((set, get) => ({
 
   loadCampaigns: async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser()
+      const { data: { session } } = await supabase.auth.getSession()
+      const user = session?.user
       if (!user) return
 
       // Campaigns where user is DM
@@ -85,8 +86,9 @@ export const useCampaignStore = create<CampaignStore>((set, get) => ({
   },
 
   createCampaign: async (name, description, gameSystemId) => {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) throw new Error('Not authenticated')
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session?.user) throw new Error('Not authenticated')
+    const user = session.user
 
     const { data, error } = await supabase
       .from('campaigns')
@@ -222,7 +224,8 @@ export const useCampaignStore = create<CampaignStore>((set, get) => ({
   },
 
   leaveCampaign: async (campaignId) => {
-    const { data: { user } } = await supabase.auth.getUser()
+    const { data: { session } } = await supabase.auth.getSession()
+    const user = session?.user
     if (!user) return
 
     await supabase

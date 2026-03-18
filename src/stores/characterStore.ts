@@ -194,19 +194,26 @@ export const useCharacterStore = create<CharacterStore>((set, get) => ({
   },
 
   saveCharacter: async () => {
-    const { character } = get()
+    const { character, saveStatus: currentStatus } = get()
     if (!character) return
+    // Prevent concurrent saves (manual vs auto-save race)
+    if (currentStatus === 'saving') return
     const updated = { ...character, updatedAt: new Date().toISOString() }
+    isSaving = true
     set({ character: updated, saveStatus: 'saving', saveError: null })
+    isSaving = false
     try {
       await withRetry(() => withTimeout(api.saveCharacter(updated), 10000), { retries: 2 })
+      isSaving = true
       set({ isDirty: false, saveStatus: 'saved', saveError: null })
+      isSaving = false
       // Reset status after 3 seconds
       setTimeout(() => {
         const { saveStatus } = get()
         if (saveStatus === 'saved') set({ saveStatus: 'idle' })
       }, 3000)
     } catch (err) {
+      isSaving = false
       const message = err instanceof Error ? err.message : 'Save failed'
       console.error('Save failed:', err)
       set({ saveStatus: 'error', saveError: message })
@@ -624,8 +631,13 @@ export const useCharacterStore = create<CharacterStore>((set, get) => ({
     }))
 }))
 
-// Mark dirty on any character change
+// Guard flag: when true, character changes are from a save operation (updatedAt only)
+// and should NOT re-mark the character as dirty.
+let isSaving = false
+
+// Mark dirty on any character change — but NOT when the change is from a save operation
 useCharacterStore.subscribe((state, prevState) => {
+  if (isSaving) return
   if (state.character && state.character !== prevState.character && !state.isDirty) {
     useCharacterStore.setState({ isDirty: true })
   }
@@ -640,16 +652,19 @@ function startAutoSave(): void {
     const { character, isDirty, saveStatus } = useCharacterStore.getState()
     if (character && isDirty && saveStatus !== 'saving') {
       try {
+        isSaving = true
         useCharacterStore.setState({ saveStatus: 'saving', saveError: null })
         const updated = { ...character, updatedAt: new Date().toISOString() }
         // Use withRetry so transient network issues don't show "Auto-save failed"
         await withRetry(() => withTimeout(api.saveCharacter(updated), 10000), { retries: 2 })
         useCharacterStore.setState({ isDirty: false, saveStatus: 'saved', saveError: null, character: updated })
+        isSaving = false
         setTimeout(() => {
           const { saveStatus: s } = useCharacterStore.getState()
           if (s === 'saved') useCharacterStore.setState({ saveStatus: 'idle' })
         }, 3000)
       } catch (err) {
+        isSaving = false
         console.error('Auto-save failed:', err)
         useCharacterStore.setState({
           saveStatus: 'error',
