@@ -415,4 +415,157 @@ export const classes: GameClass[] = [
       spellSlotsAtLevel1: 2,
     },
   },
+  {
+    id: 'kineticist',
+    name: 'Kineticist',
+    description:
+      'The power of the elements flows from within you. Roaring fire, pure water, fleeting air, steadfast earth, twisting wood, slicing metal. A kinetic gate inextricably tied to your body channels power directly from the elemental planes, causing elements to leap to your hand, whirl around your body, and blast foes at your whim. As your connection to the planes grows, you attain true mastery over your chosen elements.',
+    keyAbility: ['con'],
+    hp: 8,
+    perception: 'trained',
+    savingThrows: {
+      fortitude: 'expert',
+      reflex: 'expert',
+      will: 'trained',
+    },
+    skills: {
+      trained: ['Nature'],
+      additionalTrainedCount: 3,
+    },
+    attacks: {
+      simple: 'trained',
+      martial: 'untrained',
+      unarmed: 'trained',
+    },
+    defenses: {
+      unarmored: 'trained',
+      light: 'trained',
+      medium: 'untrained',
+      heavy: 'untrained',
+    },
+    classDC: 'trained',
+    features: [
+      {
+        name: 'Kinetic Gate',
+        level: 1,
+        description:
+          'You gain a kinetic gate that channels elemental energy. Choose a single gate (one element with an impulse junction) or a dual gate (two elements). Your gate determines which elemental impulses you can access. Elements: Air, Earth, Fire, Metal, Water, or Wood.',
+      },
+      {
+        name: 'Kinetic Aura',
+        level: 1,
+        description:
+          'Pieces of your kinetic element flow around you in a 10-foot emanation. You gain the Channel Elements action to activate your kinetic aura. While your aura is active, you can use impulses. Your aura deactivates when you are knocked unconscious, use an overflow impulse, or dismiss it.',
+      },
+      {
+        name: 'Elemental Blast',
+        level: 1,
+        description:
+          'You collect elemental matter from your aura and swing or hurl it. Make a melee or ranged impulse attack against a creature\'s AC. Add your Strength modifier to melee blast damage. A 2-action Elemental Blast adds your Constitution modifier as a status bonus to damage. Damage increases by one die every 4 levels.',
+      },
+      {
+        name: 'Base Kinesis',
+        level: 1,
+        description:
+          'You can perform basic manipulations of your chosen element—generate, move, or snuff small amounts of your element within 30 feet. This is a versatile utility ability for interacting with your element outside of combat.',
+      },
+      {
+        name: 'Extract Element',
+        level: 3,
+        description:
+          'You extract elemental matter from a creature\'s body to weaken it. Target a creature within 30 feet with a trait matching your kinetic element. It takes 2d4 damage (Fortitude save), and you gain a benefit based on the element extracted.',
+      },
+      {
+        name: "Gate's Threshold",
+        level: 5,
+        description:
+          'You reach a new threshold of elemental power. Choose to specialize further in an existing element or expand into a new one. You gain this again at levels 9, 13, and 17, potentially accessing all six elements by level 17.',
+      },
+      {
+        name: 'Kinetic Durability',
+        level: 7,
+        description:
+          'The elemental energy flowing through your body toughens you. Your proficiency rank for saving throws increases: your Fortitude save becomes master, and your Will save becomes expert.',
+      },
+      {
+        name: 'Kinetic Expertise',
+        level: 7,
+        description:
+          'Your growing mastery over your elements increases the accuracy and power of your impulses. Your proficiency rank for your kineticist class DC increases to expert.',
+      },
+      {
+        name: 'Perception Expertise',
+        level: 9,
+        description:
+          'You remain alert to threats around you. Your proficiency rank for Perception increases to expert.',
+      },
+      {
+        name: 'Kinetic Quickness',
+        level: 11,
+        description:
+          'Elemental energy quickens your reflexes. Your proficiency rank for Reflex saves increases to master.',
+      },
+      {
+        name: 'Reflow Elements',
+        level: 11,
+        description:
+          'You learn to retune the flow of your kinetic gate. During your daily preparations, you can swap one of your impulse feats for a different one you qualify for.',
+      },
+      {
+        name: 'Weapon Expertise',
+        level: 11,
+        description:
+          'You\'ve improved your combat skill. Your proficiency ranks for simple weapons and unarmed attacks increase to expert.',
+      },
+      {
+        name: 'Light Armor Expertise',
+        level: 13,
+        description:
+          'You\'ve learned how to dodge while wearing light armor or no armor. Your proficiency ranks for light armor and unarmored defense increase to expert.',
+      },
+      {
+        name: 'Weapon Specialization',
+        level: 13,
+        description:
+          'You deal additional damage with weapons and unarmed attacks you are expert with. You deal 2 additional damage with weapons and unarmed attacks in which you\'re an expert, 3 with master, and 4 with legendary.',
+      },
+      {
+        name: 'Greater Kinetic Durability',
+        level: 15,
+        description:
+          'Your elemental resilience reaches new heights. Your proficiency rank for Fortitude saves increases to legendary, and your Will save proficiency increases to master.',
+      },
+      {
+        name: 'Kinetic Mastery',
+        level: 15,
+        description:
+          'You achieve supreme control over your elements. Your proficiency rank for your kineticist class DC increases to master.',
+      },
+      {
+        name: 'Double Reflow',
+        level: 17,
+        description:
+          'Your ability to retune your kinetic gate improves. During your daily preparations, you can swap two impulse feats instead of one.',
+      },
+      {
+        name: 'Final Gate',
+        level: 19,
+        description:
+          'You open your kinetic gate to its fullest extent. You gain access to the most powerful impulses and your connection to the elemental planes reaches its apex.',
+      },
+      {
+        name: 'Kinetic Legend',
+        level: 19,
+        description:
+          'Your kinetic power is unmatched. Your proficiency rank for your kineticist class DC increases to legendary.',
+      },
+      {
+        name: 'Light Armor Mastery',
+        level: 19,
+        description:
+          'Your skill with light armor improves further. Your proficiency ranks for light armor and unarmored defense increase to master.',
+      },
+    ],
+    isSpellcaster: false,
+  },
 ]
