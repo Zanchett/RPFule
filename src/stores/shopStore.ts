@@ -157,7 +157,7 @@ export const useShopStore = create<ShopStore>((set, get) => ({
     const newGold = character.goldRemaining - totalCost
 
     // Save character changes using targeted update
-    await api.editCharacterLive(character.id, {
+    await api.saveDMEdits(character.id, {
       goldRemaining: newGold,
       purchasedEquipment: newEquipment,
     })
@@ -210,7 +210,7 @@ export const useShopStore = create<ShopStore>((set, get) => ({
     const newGold = character.goldRemaining + sellPrice
 
     // Save character changes using targeted update
-    await api.editCharacterLive(character.id, {
+    await api.saveDMEdits(character.id, {
       goldRemaining: newGold,
       purchasedEquipment: newEquipment,
     })

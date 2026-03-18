@@ -160,7 +160,7 @@ function ShopCard({ shop, campaignId }: { shop: CampaignShop; campaignId: string
                           value={inv.customPrice ?? inv.item.price}
                           onChange={(val) => {
                             const newPrice = val as number
-                            updateShopItemPrice(shop.id, inv.itemId, newPrice === inv.item.price ? null : newPrice)
+                            updateShopItemPrice(shop.id, inv.itemId, newPrice === inv.item!.price ? null : newPrice)
                           }}
                           styles={{ input: { background: '#1a1209', color: '#d4a843', borderColor: '#4a3828' } }}
                         />
