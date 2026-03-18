@@ -1,0 +1,540 @@
+/* Medieval/Fantasy Theme for RPG Character Creator */
+
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700;800;900&family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&family=MedievalSharp&display=swap');
+
+:root {
+  /* Fantasy color palette */
+  --parchment-light: #f4e4c1;
+  --parchment: #e8d5a3;
+  --parchment-dark: #c4a96a;
+  --leather-light: #8b6e4e;
+  --leather: #5c3d2e;
+  --leather-dark: #3a2218;
+  --gold: #d4a843;
+  --gold-bright: #f0c75e;
+  --gold-dim: #9a7b2f;
+  --blood-red: #8b1a1a;
+  --blood-red-bright: #c0392b;
+  --deep-blue: #2c3e6b;
+  --forest-green: #2d5a27;
+  --ink: #1a1209;
+  --ink-light: #2e2013;
+  --scroll-bg: #1e1610;
+  --card-bg: #241c14;
+  --card-border: #4a3828;
+  --card-hover: #2e2218;
+  --card-selected: #3a2a1a;
+}
+
+/* Global body */
+body {
+  background: var(--ink) !important;
+  color: var(--parchment) !important;
+}
+
+/* Fantasy card styling */
+.fantasy-card {
+  background: linear-gradient(145deg, #241c14 0%, #1e1610 100%) !important;
+  border: 1px solid var(--card-border) !important;
+  border-radius: 4px !important;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.fantasy-card:hover {
+  border-color: var(--gold-dim) !important;
+  box-shadow: 0 0 12px rgba(212, 168, 67, 0.15);
+}
+
+.fantasy-card.selected {
+  border-color: var(--gold) !important;
+  box-shadow: 0 0 16px rgba(212, 168, 67, 0.3), inset 0 0 20px rgba(212, 168, 67, 0.05);
+}
+
+/* Corner ornaments for cards */
+.fantasy-card::before,
+.fantasy-card::after {
+  content: '';
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-color: var(--gold-dim);
+  pointer-events: none;
+}
+
+.fantasy-card::before {
+  top: -1px;
+  left: -1px;
+  border-top: 2px solid;
+  border-left: 2px solid;
+  border-color: inherit;
+}
+
+.fantasy-card::after {
+  bottom: -1px;
+  right: -1px;
+  border-bottom: 2px solid;
+  border-right: 2px solid;
+  border-color: inherit;
+}
+
+.fantasy-card.selected::before,
+.fantasy-card.selected::after {
+  border-color: var(--gold);
+}
+
+/* Ornamental divider */
+.ornament-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 16px 0;
+  color: var(--gold-dim);
+  font-size: 14px;
+}
+
+.ornament-divider::before,
+.ornament-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--card-border), transparent);
+}
+
+/* Mantine overrides for medieval look */
+.mantine-Tabs-tab {
+  font-family: 'Cinzel', serif !important;
+  font-weight: 600 !important;
+  font-size: 0.8rem !important;
+  letter-spacing: 0.03em;
+  color: var(--parchment-dark) !important;
+  border-bottom: 2px solid transparent !important;
+  transition: all 0.2s ease;
+}
+
+.mantine-Tabs-tab:hover {
+  color: var(--gold) !important;
+  background: rgba(212, 168, 67, 0.05) !important;
+}
+
+.mantine-Tabs-tab[data-active] {
+  color: var(--gold-bright) !important;
+  border-bottom-color: var(--gold) !important;
+}
+
+.mantine-Tabs-list {
+  border-bottom-color: var(--card-border) !important;
+}
+
+/* Mantine Card override */
+.mantine-Card-root {
+  background: linear-gradient(145deg, #241c14 0%, #1e1610 100%) !important;
+  border-color: var(--card-border) !important;
+}
+
+/* Text input styling */
+.mantine-TextInput-input,
+.mantine-Select-input,
+.mantine-Textarea-input,
+.mantine-MultiSelect-input {
+  background: rgba(30, 22, 16, 0.8) !important;
+  border-color: var(--card-border) !important;
+  color: var(--parchment) !important;
+  font-family: 'Crimson Text', serif !important;
+  font-size: 1rem !important;
+}
+
+.mantine-TextInput-input:focus,
+.mantine-Select-input:focus,
+.mantine-Textarea-input:focus,
+.mantine-MultiSelect-input:focus-within {
+  border-color: var(--gold-dim) !important;
+}
+
+.mantine-TextInput-label,
+.mantine-Select-label,
+.mantine-Textarea-label,
+.mantine-MultiSelect-label,
+.mantine-Checkbox-label {
+  font-family: 'Cinzel', serif !important;
+  font-weight: 600 !important;
+  font-size: 0.85rem !important;
+  color: var(--parchment-dark) !important;
+}
+
+/* Badge overrides for medieval look */
+.mantine-Badge-root {
+  font-family: 'Cinzel', serif !important;
+  letter-spacing: 0.05em;
+  border-radius: 0 !important;
+}
+
+/* Muted badge classes for consistent medieval styling */
+.badge-muted {
+  background: rgba(154, 123, 47, 0.12) !important;
+  color: #c4a96a !important;
+  border: 1px solid rgba(154, 123, 47, 0.25) !important;
+}
+
+.badge-boost {
+  background: rgba(154, 123, 47, 0.18) !important;
+  color: #d4a843 !important;
+  border: 1px solid rgba(154, 123, 47, 0.35) !important;
+}
+
+.badge-flaw {
+  background: rgba(139, 26, 26, 0.12) !important;
+  color: #a04040 !important;
+  border: 1px solid rgba(139, 26, 26, 0.25) !important;
+}
+
+/* Selection list item (accordion-style) */
+.selection-item {
+  background: linear-gradient(145deg, #241c14 0%, #1e1610 100%);
+  border: 1px solid var(--card-border);
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.selection-item:first-child {
+  border-radius: 2px 2px 0 0;
+}
+
+.selection-item:last-child {
+  border-radius: 0 0 2px 2px;
+}
+
+.selection-item + .selection-item {
+  border-top: none;
+}
+
+.selection-item:hover {
+  background: linear-gradient(145deg, #2e2218 0%, #241c14 100%);
+  border-color: var(--gold-dim);
+}
+
+.selection-item:hover + .selection-item {
+  border-top-color: transparent;
+}
+
+.selection-item.selected {
+  background: linear-gradient(145deg, rgba(212, 168, 67, 0.08) 0%, rgba(154, 123, 47, 0.04) 100%);
+  border: 1px solid var(--gold) !important;
+  box-shadow: inset 3px 0 0 var(--gold), 0 0 12px rgba(212, 168, 67, 0.1);
+  z-index: 1;
+}
+
+.selection-item.selected + .selection-item {
+  border-top: 1px solid var(--card-border);
+}
+
+/* Expanded content area within selection item */
+.selection-expanded {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(74, 56, 40, 0.5);
+}
+
+/* Feat selection items */
+.feat-item {
+  background: linear-gradient(145deg, #241c14 0%, #1e1610 100%);
+  border: 1px solid var(--card-border);
+  padding: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.feat-item:hover {
+  border-color: var(--gold-dim);
+  background: linear-gradient(145deg, #2e2218 0%, #241c14 100%);
+}
+
+.feat-item.selected {
+  border-color: var(--gold) !important;
+  background: linear-gradient(145deg, rgba(212, 168, 67, 0.08) 0%, rgba(154, 123, 47, 0.04) 100%);
+  box-shadow: inset 3px 0 0 var(--gold), 0 0 8px rgba(212, 168, 67, 0.1);
+}
+
+/* Button overrides */
+.mantine-Button-root {
+  font-family: 'Cinzel', serif !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.05em;
+}
+
+/* Table styling */
+.mantine-Table-thead .mantine-Table-tr {
+  border-bottom-color: var(--card-border) !important;
+}
+
+.mantine-Table-tr {
+  border-bottom-color: rgba(74, 56, 40, 0.4) !important;
+}
+
+.mantine-Table-th {
+  font-family: 'Cinzel', serif !important;
+  font-weight: 600 !important;
+  color: var(--gold-dim) !important;
+}
+
+/* Dropdown / Popover / Combobox styling */
+.mantine-Select-dropdown,
+.mantine-MultiSelect-dropdown,
+.mantine-Combobox-dropdown {
+  background: #241c14 !important;
+  border-color: var(--card-border) !important;
+}
+
+.mantine-Combobox-option {
+  font-family: 'Crimson Text', serif !important;
+  color: var(--parchment) !important;
+}
+
+.mantine-Combobox-option:hover,
+.mantine-Combobox-option[data-combobox-selected] {
+  background: rgba(212, 168, 67, 0.12) !important;
+}
+
+/* Alert styling */
+.mantine-Alert-root {
+  border-color: var(--card-border) !important;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--ink);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--card-border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--leather-light);
+}
+
+/* Checkbox */
+.mantine-Checkbox-input:checked {
+  background-color: var(--gold-dim) !important;
+  border-color: var(--gold) !important;
+}
+
+/* ======================== */
+/* Live Play Features       */
+/* ======================== */
+
+/* HP tracker color states */
+.hp-healthy { color: #4a9e3f !important; }
+.hp-bloodied { color: #d4a843 !important; }
+.hp-critical { color: #c0392b !important; animation: pulse 1.5s ease-in-out infinite; }
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Dice roll overlay */
+@keyframes diceSlideIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes diceFadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; transform: translateY(-10px); }
+}
+
+.dice-result-overlay {
+  animation: diceSlideIn 0.25s ease;
+}
+
+.dice-result-overlay.fading {
+  animation: diceFadeOut 0.3s ease forwards;
+}
+
+/* Spell slot circles */
+.spell-slot {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid var(--card-border);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.spell-slot.available {
+  background: rgba(154, 123, 47, 0.35);
+  border-color: var(--gold);
+  box-shadow: 0 0 4px rgba(212, 168, 67, 0.2);
+}
+
+.spell-slot.used {
+  background: transparent;
+  border-color: var(--card-border);
+  opacity: 0.5;
+}
+
+.spell-slot:hover {
+  border-color: var(--gold-bright);
+  box-shadow: 0 0 8px rgba(240, 199, 94, 0.3);
+}
+
+/* Hero point circles */
+.hero-point {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid var(--card-border);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.hero-point.filled {
+  background: radial-gradient(circle, var(--gold-bright), var(--gold));
+  border-color: var(--gold);
+  box-shadow: 0 0 8px rgba(240, 199, 94, 0.4);
+}
+
+.hero-point.empty {
+  background: transparent;
+  border-color: var(--card-border);
+}
+
+.hero-point:hover {
+  border-color: var(--gold-bright);
+}
+
+/* Condition badges */
+.badge-condition {
+  background: rgba(44, 62, 107, 0.25) !important;
+  color: #7b9ec9 !important;
+  border: 1px solid rgba(44, 62, 107, 0.5) !important;
+  cursor: pointer;
+}
+
+.badge-condition:hover {
+  background: rgba(44, 62, 107, 0.4) !important;
+}
+
+/* Clickable stat blocks */
+.stat-clickable {
+  cursor: pointer;
+  transition: all 0.15s ease;
+  position: relative;
+}
+
+.stat-clickable:hover {
+  border-color: var(--gold) !important;
+  box-shadow: 0 0 12px rgba(212, 168, 67, 0.2);
+}
+
+.stat-clickable:hover::after {
+  content: '\1F3B2';
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  font-size: 12px;
+  opacity: 0.6;
+}
+
+/* XP progress bar */
+.xp-progress-track {
+  background: var(--card-border);
+  height: 8px;
+  overflow: hidden;
+}
+
+.xp-progress-fill {
+  background: linear-gradient(90deg, var(--gold-dim), var(--gold-bright));
+  height: 100%;
+  transition: width 0.5s ease;
+}
+
+/* Level up glow */
+.level-up-ready {
+  animation: levelGlow 2s ease-in-out infinite;
+}
+
+@keyframes levelGlow {
+  0%, 100% { box-shadow: 0 0 8px rgba(240, 199, 94, 0.3); }
+  50% { box-shadow: 0 0 20px rgba(240, 199, 94, 0.6); }
+}
+
+/* Portrait container */
+.portrait-container {
+  width: 100px;
+  height: 100px;
+  border: 2px solid var(--card-border);
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+  flex-shrink: 0;
+  background: rgba(36, 28, 20, 0.8);
+}
+
+.portrait-container:hover {
+  border-color: var(--gold-dim);
+}
+
+/* Natural 20 / Natural 1 dice styles */
+.nat-20 {
+  color: var(--gold-bright) !important;
+  text-shadow: 0 0 12px rgba(240, 199, 94, 0.5);
+}
+
+.nat-1 {
+  color: var(--blood-red-bright) !important;
+  text-shadow: 0 0 12px rgba(192, 57, 43, 0.5);
+}
+
+/* Long rest button */
+.long-rest-btn {
+  border-color: var(--deep-blue) !important;
+  color: #7b9ec9 !important;
+}
+
+.long-rest-btn:hover {
+  background: rgba(44, 62, 107, 0.2) !important;
+  box-shadow: 0 0 12px rgba(44, 62, 107, 0.3);
+}
+
+/* Quick HP adjust buttons */
+.hp-adjust-btn {
+  border-color: var(--card-border) !important;
+  color: var(--parchment-dark) !important;
+  font-family: "Cinzel", serif;
+  min-width: 40px;
+}
+
+.hp-adjust-btn:hover {
+  border-color: var(--gold-dim) !important;
+  background: rgba(154, 123, 47, 0.1) !important;
+}
+
+.hp-adjust-btn.damage {
+  color: var(--blood-red-bright) !important;
+  border-color: rgba(192, 57, 43, 0.3) !important;
+}
+
+.hp-adjust-btn.damage:hover {
+  background: rgba(192, 57, 43, 0.1) !important;
+}
+
+.hp-adjust-btn.heal {
+  color: #4a9e3f !important;
+  border-color: rgba(74, 158, 63, 0.3) !important;
+}
+
+.hp-adjust-btn.heal:hover {
+  background: rgba(74, 158, 63, 0.1) !important;
+}
