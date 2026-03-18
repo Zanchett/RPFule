@@ -4,5 +4,8 @@ out/
 .env
 .env.local
 *.log
+*.rar
+_archive/
 
 .vercel
+.claude/settings.local.json
