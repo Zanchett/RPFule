@@ -199,7 +199,7 @@ export const useCharacterStore = create<CharacterStore>((set, get) => ({
     const updated = { ...character, updatedAt: new Date().toISOString() }
     set({ character: updated, saveStatus: 'saving', saveError: null })
     try {
-      await withTimeout(api.saveCharacter(updated), 10000)
+      await withRetry(() => withTimeout(api.saveCharacter(updated), 10000), { retries: 2 })
       set({ isDirty: false, saveStatus: 'saved', saveError: null })
       // Reset status after 3 seconds
       setTimeout(() => {
@@ -642,7 +642,8 @@ function startAutoSave(): void {
       try {
         useCharacterStore.setState({ saveStatus: 'saving', saveError: null })
         const updated = { ...character, updatedAt: new Date().toISOString() }
-        await withTimeout(api.saveCharacter(updated), 10000)
+        // Use withRetry so transient network issues don't show "Auto-save failed"
+        await withRetry(() => withTimeout(api.saveCharacter(updated), 10000), { retries: 2 })
         useCharacterStore.setState({ isDirty: false, saveStatus: 'saved', saveError: null, character: updated })
         setTimeout(() => {
           const { saveStatus: s } = useCharacterStore.getState()

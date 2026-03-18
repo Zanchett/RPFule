@@ -1,5 +1,21 @@
 import { supabase } from './supabase'
-import { Character } from '../types'
+import { Character, AbilityId } from '../types'
+import { withRetry } from './retry'
+
+// Cache the current user to avoid network round-trips on every save.
+// supabase.auth.getUser() hits the network every call, which is slow
+// and fails if there's any transient issue.
+// supabase.auth.getSession() reads from local storage — much faster.
+async function getCurrentUserId(): Promise<string> {
+  // First try the fast path: local session cache
+  const { data: { session } } = await supabase.auth.getSession()
+  if (session?.user?.id) return session.user.id
+
+  // Fallback: network call to verify (handles edge cases like token refresh)
+  const { data: { user }, error } = await supabase.auth.getUser()
+  if (error || !user) throw new Error('Not authenticated')
+  return user.id
+}
 
 interface CharacterRow {
   id: string
@@ -37,37 +53,75 @@ function characterToRow(character: Character, userId: string): Omit<CharacterRow
 }
 
 function rowToCharacter(row: CharacterRow): Character {
-  const data = row.data as Record<string, unknown>
+  const data = (row.data ?? {}) as Record<string, unknown>
+
+  // Safely extract nested objects with full defaults for old/broken data
+  const rawBoosts = data.abilityBoosts as Record<string, unknown> | undefined
+  const abilityBoosts: Character['abilityBoosts'] = {
+    ancestry: Array.isArray(rawBoosts?.ancestry) ? rawBoosts.ancestry as AbilityId[] : [],
+    background: Array.isArray(rawBoosts?.background) ? rawBoosts.background as AbilityId[] : [],
+    class: Array.isArray(rawBoosts?.class) ? rawBoosts.class as AbilityId[] : [],
+    free: Array.isArray(rawBoosts?.free) ? rawBoosts.free as AbilityId[] : []
+  }
+
+  const rawFlaws = data.abilityFlaws as Record<string, unknown> | undefined
+  const abilityFlaws: Character['abilityFlaws'] = {
+    ancestry: Array.isArray(rawFlaws?.ancestry) ? rawFlaws.ancestry as AbilityId[] : []
+  }
+
+  const rawFeats = data.selectedFeats as Record<string, unknown> | undefined
+  const selectedFeats: Character['selectedFeats'] = {
+    ancestryFeats: Array.isArray(rawFeats?.ancestryFeats) ? rawFeats.ancestryFeats as string[] : [],
+    classFeats: Array.isArray(rawFeats?.classFeats) ? rawFeats.classFeats as string[] : [],
+    generalFeats: Array.isArray(rawFeats?.generalFeats) ? rawFeats.generalFeats as string[] : [],
+    skillFeats: Array.isArray(rawFeats?.skillFeats) ? rawFeats.skillFeats as string[] : []
+  }
+
+  // Normalize purchasedEquipment — old versions might have different shapes
+  let purchasedEquipment: Character['purchasedEquipment'] = []
+  if (Array.isArray(data.purchasedEquipment)) {
+    purchasedEquipment = (data.purchasedEquipment as unknown[]).map((item) => {
+      if (typeof item === 'string') {
+        // Old format: just item ID strings
+        return { itemId: item, quantity: 1 }
+      }
+      if (item && typeof item === 'object' && 'itemId' in item) {
+        const obj = item as { itemId: string; quantity?: number }
+        return { itemId: obj.itemId, quantity: obj.quantity ?? 1 }
+      }
+      return { itemId: String(item), quantity: 1 }
+    })
+  }
+
   return {
     id: row.id,
-    gameSystemId: row.game_system_id,
-    name: row.name,
-    level: row.level,
-    ancestryId: row.ancestry_id,
-    classId: row.class_id,
-    campaignId: row.campaign_id,
-    // Spread all other fields from JSONB data
+    gameSystemId: row.game_system_id || 'pf2e',
+    name: row.name || 'Unnamed Character',
+    level: row.level ?? 1,
+    ancestryId: row.ancestry_id ?? null,
+    classId: row.class_id ?? null,
+    campaignId: row.campaign_id ?? null,
     heritageId: (data.heritageId as string | null) ?? null,
     backgroundId: (data.backgroundId as string | null) ?? null,
-    abilityBoosts: (data.abilityBoosts as Character['abilityBoosts']) ?? { ancestry: [], background: [], class: [], free: [] },
-    abilityFlaws: (data.abilityFlaws as Character['abilityFlaws']) ?? { ancestry: [] },
+    abilityBoosts,
+    abilityFlaws,
     manualAbilityOverrides: (data.manualAbilityOverrides as Character['manualAbilityOverrides']) ?? null,
-    skillTraining: (data.skillTraining as string[]) ?? [],
-    selectedFeats: (data.selectedFeats as Character['selectedFeats']) ?? { ancestryFeats: [], classFeats: [], generalFeats: [], skillFeats: [] },
-    purchasedEquipment: (data.purchasedEquipment as Character['purchasedEquipment']) ?? [],
-    goldRemaining: (data.goldRemaining as number) ?? 1500,
+    skillTraining: Array.isArray(data.skillTraining) ? data.skillTraining as string[] : [],
+    selectedFeats,
+    purchasedEquipment,
+    goldRemaining: typeof data.goldRemaining === 'number' ? data.goldRemaining : 1500,
     alignment: (data.alignment as string) ?? '',
     deity: (data.deity as string) ?? '',
-    languages: (data.languages as string[]) ?? [],
+    languages: Array.isArray(data.languages) ? data.languages as string[] : [],
     notes: (data.notes as string) ?? '',
     // Live play state
-    currentHP: (data.currentHP as number) ?? 0,
-    tempHP: (data.tempHP as number) ?? 0,
-    xp: (data.xp as number) ?? 0,
-    heroPoints: (data.heroPoints as number) ?? 1,
-    conditions: (data.conditions as string[]) ?? [],
-    spellSlotsUsed: (data.spellSlotsUsed as Record<number, number>) ?? {},
-    focusPointsUsed: (data.focusPointsUsed as number) ?? 0,
+    currentHP: typeof data.currentHP === 'number' ? data.currentHP : 0,
+    tempHP: typeof data.tempHP === 'number' ? data.tempHP : 0,
+    xp: typeof data.xp === 'number' ? data.xp : 0,
+    heroPoints: typeof data.heroPoints === 'number' ? data.heroPoints : 1,
+    conditions: Array.isArray(data.conditions) ? data.conditions as string[] : [],
+    spellSlotsUsed: (data.spellSlotsUsed && typeof data.spellSlotsUsed === 'object' ? data.spellSlotsUsed : {}) as Record<number, number>,
+    focusPointsUsed: typeof data.focusPointsUsed === 'number' ? data.focusPointsUsed : 0,
     portraitBase64: (data.portraitBase64 as string) ?? '',
     sessionNotes: (data.sessionNotes as string) ?? '',
     // Meta
@@ -77,10 +131,8 @@ function rowToCharacter(row: CharacterRow): Character {
 }
 
 export async function saveCharacter(character: Character): Promise<void> {
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Not authenticated')
-
-  const row = characterToRow(character, user.id)
+  const userId = await getCurrentUserId()
+  const row = characterToRow(character, userId)
   const { error } = await supabase.from('characters').upsert(row)
   if (error) throw error
 }
@@ -101,13 +153,13 @@ export async function deleteCharacter(id: string): Promise<void> {
 }
 
 export async function listCharacters(): Promise<Character[]> {
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return []
+  const userId = await getCurrentUserId().catch(() => null)
+  if (!userId) return []
 
   const { data, error } = await supabase
     .from('characters')
     .select('*')
-    .eq('user_id', user.id)
+    .eq('user_id', userId)
     .order('updated_at', { ascending: false })
   if (error) throw error
   return (data ?? []).map((row) => rowToCharacter(row as CharacterRow))
