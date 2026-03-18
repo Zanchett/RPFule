@@ -153,50 +153,89 @@ export function AncestryTab(): JSX.Element {
                   </Text>
 
                   <Stack gap={0}>
-                    {ancestry.heritages.map((heritage) => {
-                      const isHeritageSelected = character.heritageId === heritage.id
+                    {(() => {
+                      const versatileIds = ['aasimar', 'tiefling', 'dhampir', 'changeling', 'duskwalker', 'geniekin', 'beastkin', 'reflection']
+                      const mixedIds = ['half-elf', 'half-orc']
+                      const standardHeritages = ancestry.heritages.filter((h) => !versatileIds.includes(h.id) && !mixedIds.includes(h.id))
+                      const mixedHeritages = ancestry.heritages.filter((h) => mixedIds.includes(h.id))
+                      const versatileHeritage = ancestry.heritages.filter((h) => versatileIds.includes(h.id))
+
+                      const renderHeritage = (heritage: typeof ancestry.heritages[0]) => {
+                        const isHeritageSelected = character.heritageId === heritage.id
+                        return (
+                          <Box
+                            key={heritage.id}
+                            className={`selection-item ${isHeritageSelected ? 'selected' : ''}`}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setHeritage(heritage.id)
+                            }}
+                          >
+                            <Group gap="sm">
+                              <Text style={{ color: '#d4a843', fontSize: 12 }}>
+                                {isHeritageSelected ? '✦' : '◇'}
+                              </Text>
+                              <Text
+                                fw={600}
+                                style={{
+                                  fontFamily: '"Cinzel", serif',
+                                  color: '#e8d5a3',
+                                  fontSize: '0.85rem'
+                                }}
+                              >
+                                {heritage.name}
+                              </Text>
+                            </Group>
+
+                            {isHeritageSelected && (
+                              <Box
+                                className="selection-expanded"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <Text size="sm" style={{ color: '#8b7355' }} mb="xs">
+                                  {heritage.description}
+                                </Text>
+                                <Text size="sm" style={{ color: '#a3b86c' }}>
+                                  {heritage.benefits}
+                                </Text>
+                              </Box>
+                            )}
+                          </Box>
+                        )
+                      }
 
                       return (
-                        <Box
-                          key={heritage.id}
-                          className={`selection-item ${isHeritageSelected ? 'selected' : ''}`}
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            setHeritage(heritage.id)
-                          }}
-                        >
-                          <Group gap="sm">
-                            <Text style={{ color: '#d4a843', fontSize: 12 }}>
-                              {isHeritageSelected ? '✦' : '◇'}
-                            </Text>
-                            <Text
-                              fw={600}
-                              style={{
-                                fontFamily: '"Cinzel", serif',
-                                color: '#e8d5a3',
-                                fontSize: '0.85rem'
-                              }}
-                            >
-                              {heritage.name}
-                            </Text>
-                          </Group>
-
-                          {isHeritageSelected && (
-                            <Box
-                              className="selection-expanded"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <Text size="sm" style={{ color: '#8b7355' }} mb="xs">
-                                {heritage.description}
+                        <>
+                          {standardHeritages.map(renderHeritage)}
+                          {mixedHeritages.length > 0 && (
+                            <>
+                              <Text
+                                fw={600}
+                                mt="sm"
+                                mb={4}
+                                style={{ fontFamily: '"Cinzel", serif', color: '#9a7b2f', fontSize: '0.8rem', letterSpacing: '0.05em' }}
+                              >
+                                Mixed Heritages
                               </Text>
-                              <Text size="sm" style={{ color: '#a3b86c' }}>
-                                {heritage.benefits}
-                              </Text>
-                            </Box>
+                              {mixedHeritages.map(renderHeritage)}
+                            </>
                           )}
-                        </Box>
+                          {versatileHeritage.length > 0 && (
+                            <>
+                              <Text
+                                fw={600}
+                                mt="sm"
+                                mb={4}
+                                style={{ fontFamily: '"Cinzel", serif', color: '#9a7b2f', fontSize: '0.8rem', letterSpacing: '0.05em' }}
+                              >
+                                Versatile Heritages
+                              </Text>
+                              {versatileHeritage.map(renderHeritage)}
+                            </>
+                          )}
+                        </>
                       )
-                    })}
+                    })()}
                   </Stack>
 
                   {/* Free Ability Boosts */}
