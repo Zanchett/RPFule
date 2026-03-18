@@ -18,6 +18,7 @@ interface ShopStore {
   addItemToShop: (shopId: string, itemId: string, stock: number | null) => Promise<void>
   removeItemFromShop: (shopId: string, itemId: string) => Promise<void>
   updateShopItemStock: (shopId: string, itemId: string, stock: number | null) => Promise<void>
+  updateShopItemPrice: (shopId: string, itemId: string, customPrice: number | null) => Promise<void>
 
   // Player actions
   buyItem: (shopId: string, character: Character, itemId: string, quantity: number) => Promise<Character>
@@ -113,6 +114,20 @@ export const useShopStore = create<ShopStore>((set, get) => ({
     }))
   },
 
+  updateShopItemPrice: async (shopId, itemId, customPrice) => {
+    const shop = get().shops.find((s) => s.id === shopId)
+    if (!shop) return
+    const newInventory = shop.inventory.map((i) =>
+      i.itemId === itemId ? { ...i, customPrice } : i
+    )
+    await shopApi.updateShop(shopId, { inventory: newInventory })
+    set((s) => ({
+      shops: s.shops.map((sh) =>
+        sh.id === shopId ? { ...sh, inventory: newInventory } : sh
+      ),
+    }))
+  },
+
   buyItem: async (shopId, character, itemId, quantity) => {
     const shop = get().shops.find((s) => s.id === shopId)
     if (!shop) throw new Error('Shop not found')
@@ -139,21 +154,31 @@ export const useShopStore = create<ShopStore>((set, get) => ({
         )
       : [...character.purchasedEquipment, { itemId, quantity }]
 
+    const newGold = character.goldRemaining - totalCost
+
+    // Save character changes using targeted update
+    await api.editCharacterLive(character.id, {
+      goldRemaining: newGold,
+      purchasedEquipment: newEquipment,
+    })
+
     const updatedChar: Character = {
       ...character,
-      goldRemaining: character.goldRemaining - totalCost,
+      goldRemaining: newGold,
       purchasedEquipment: newEquipment,
     }
 
-    // Save character changes
-    await api.saveCharacter(updatedChar)
-
-    // Update shop stock if finite
+    // Update shop stock locally if finite
     if (shopItem.stock !== null) {
       const newInventory = shop.inventory.map((i) =>
         i.itemId === itemId ? { ...i, stock: (i.stock ?? 0) - quantity } : i
       )
-      await shopApi.updateShop(shopId, { inventory: newInventory })
+      // Try to persist stock change — may fail if player lacks update permission
+      try {
+        await shopApi.updateShop(shopId, { inventory: newInventory })
+      } catch {
+        // Stock update will sync via realtime when DM makes changes
+      }
       set((s) => ({
         shops: s.shops.map((sh) =>
           sh.id === shopId ? { ...sh, inventory: newInventory } : sh
@@ -182,15 +207,19 @@ export const useShopStore = create<ShopStore>((set, get) => ({
       )
       .filter((p) => p.quantity > 0)
 
-    const updatedChar: Character = {
+    const newGold = character.goldRemaining + sellPrice
+
+    // Save character changes using targeted update
+    await api.editCharacterLive(character.id, {
+      goldRemaining: newGold,
+      purchasedEquipment: newEquipment,
+    })
+
+    return {
       ...character,
-      goldRemaining: character.goldRemaining + sellPrice,
+      goldRemaining: newGold,
       purchasedEquipment: newEquipment,
     }
-
-    await api.saveCharacter(updatedChar)
-
-    return updatedChar
   },
 
   subscribeToShops: (campaignId) => {

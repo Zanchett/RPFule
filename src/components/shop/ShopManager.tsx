@@ -53,7 +53,7 @@ const categories: { key: EquipmentCategory; label: string }[] = [
 ]
 
 function ShopCard({ shop, campaignId }: { shop: CampaignShop; campaignId: string }) {
-  const { toggleVisibility, deleteShop, addItemToShop, removeItemFromShop, updateShopItemStock, updateShop } = useShopStore()
+  const { toggleVisibility, deleteShop, addItemToShop, removeItemFromShop, updateShopItemStock, updateShopItemPrice, updateShop } = useShopStore()
   const [expanded, setExpanded] = useState(false)
   const [showItemPicker, setShowItemPicker] = useState(false)
   const [editing, setEditing] = useState(false)
@@ -152,7 +152,31 @@ function ShopCard({ shop, campaignId }: { shop: CampaignShop; campaignId: string
                       <Text size="sm" style={{ color: '#e8d5a3' }}>{inv.item.name}</Text>
                     </Table.Td>
                     <Table.Td>
-                      <Text size="sm" style={{ color: '#d4a843' }}>{formatPrice(inv.customPrice ?? inv.item.price)}</Text>
+                      <Group gap="xs">
+                        <NumberInput
+                          size="xs"
+                          w={80}
+                          min={0}
+                          value={inv.customPrice ?? inv.item.price}
+                          onChange={(val) => {
+                            const newPrice = val as number
+                            updateShopItemPrice(shop.id, inv.itemId, newPrice === inv.item.price ? null : newPrice)
+                          }}
+                          styles={{ input: { background: '#1a1209', color: '#d4a843', borderColor: '#4a3828' } }}
+                        />
+                        <Text size="xs" style={{ color: '#5c4a35' }}>cp</Text>
+                        {inv.customPrice !== null && inv.customPrice !== inv.item.price && (
+                          <ActionIcon
+                            variant="subtle"
+                            size="xs"
+                            onClick={() => updateShopItemPrice(shop.id, inv.itemId, null)}
+                            title="Reset to default price"
+                            style={{ color: '#8b7355' }}
+                          >
+                            ↺
+                          </ActionIcon>
+                        )}
+                      </Group>
                     </Table.Td>
                     <Table.Td>
                       <Group gap="xs">

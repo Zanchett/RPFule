@@ -229,7 +229,32 @@ export function EquipmentTab(): JSX.Element {
                     p.item && (
                       <Table.Tr key={p.itemId}>
                         <Table.Td>
-                          <Text size="sm" style={{ color: '#e8d5a3' }}>{p.item.name}</Text>
+                          <Stack gap={0}>
+                            <Text size="sm" style={{ color: '#e8d5a3' }}>{p.item.name}</Text>
+                            {p.item.damage && (
+                              <Text size="xs" style={{ color: '#5c4a35' }}>
+                                {p.item.damage} {p.item.damageType}
+                                {p.item.traits && p.item.traits.length > 0 && ` (${p.item.traits.join(', ')})`}
+                                {p.item.range && ` - Range ${p.item.range} ft`}
+                              </Text>
+                            )}
+                            {p.item.acBonus !== undefined && (
+                              <Text size="xs" style={{ color: '#5c4a35' }}>
+                                AC +{p.item.acBonus}
+                                {p.item.dexCap !== undefined && `, Dex Cap +${p.item.dexCap}`}
+                                {p.item.checkPenalty ? `, Check Penalty ${p.item.checkPenalty}` : ''}
+                                {p.item.speedPenalty ? `, Speed Penalty −${Math.abs(p.item.speedPenalty)} ft` : ''}
+                              </Text>
+                            )}
+                            {p.item.effect && !p.item.damage && p.item.acBonus === undefined && (
+                              <Text size="xs" style={{ color: '#5c4a35' }}>{p.item.effect}</Text>
+                            )}
+                            {p.item.rarity && p.item.rarity !== 'common' && (
+                              <Badge size="xs" variant="outline" color={p.item.rarity === 'rare' ? 'blue' : p.item.rarity === 'unique' ? 'grape' : 'yellow'} mt={2}>
+                                {p.item.rarity}
+                              </Badge>
+                            )}
+                          </Stack>
                         </Table.Td>
                         <Table.Td>
                           <Text size="sm" style={{ color: '#c4a96a' }}>{p.quantity}</Text>
