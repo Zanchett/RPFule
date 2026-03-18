@@ -501,6 +501,213 @@ export const feats: Feat[] = [
   },
 
   // ========================
+  // Catfolk Ancestry Feats
+  // ========================
+  {
+    id: 'cats-luck',
+    name: "Cat's Luck",
+    type: 'ancestry',
+    level: 1,
+    ancestryId: 'catfolk',
+    description:
+      'You have inherited your people\'s legendary fortune. When you fail a Reflex saving throw, you can use your reaction to reroll the save and use the better result. You can use this once per day.',
+  },
+  {
+    id: 'catfolk-lore',
+    name: 'Catfolk Lore',
+    type: 'ancestry',
+    level: 1,
+    ancestryId: 'catfolk',
+    description:
+      'Growing up among catfolk has taught you the traditional ways of your people. You become trained in Acrobatics and Survival. If you would automatically become trained in one of those skills, you instead become trained in a skill of your choice. You also become trained in Catfolk Lore.',
+  },
+  {
+    id: 'catfolk-weapon-familiarity',
+    name: 'Catfolk Weapon Familiarity',
+    type: 'ancestry',
+    level: 1,
+    ancestryId: 'catfolk',
+    description:
+      'You favor the weapons of your people. You are trained with the kama, kukri, claw blade, and whip claw. In addition, you gain access to all uncommon catfolk weapons. For the purposes of determining your proficiency, martial catfolk weapons are simple weapons and advanced catfolk weapons are martial weapons.',
+  },
+  {
+    id: 'cat-nap',
+    name: 'Cat Nap',
+    type: 'ancestry',
+    level: 1,
+    ancestryId: 'catfolk',
+    description:
+      'You can quickly recover energy with a short rest. You can take a 10-minute rest to regain Hit Points as if you had rested for a full night, recovering Hit Points equal to your Constitution modifier times your level. You can use Cat Nap once per day.',
+  },
+  {
+    id: 'catfolk-dance',
+    name: 'Catfolk Dance',
+    type: 'ancestry',
+    level: 1,
+    ancestryId: 'catfolk',
+    description:
+      'You have a feline grace that translates into a mesmerizing dance. You can use Performance instead of Diplomacy to Make an Impression, weaving your catlike movements into a captivating display.',
+  },
+  {
+    id: 'well-met-traveler',
+    name: 'Well-Met Traveler',
+    type: 'ancestry',
+    level: 1,
+    ancestryId: 'catfolk',
+    description:
+      'Your gregarious nature helps you make friends wherever you go. You gain a +1 circumstance bonus to Diplomacy checks to Make an Impression and to Gather Information. If you speak the local language, this bonus increases to +2.',
+  },
+  {
+    id: 'saber-teeth',
+    name: 'Saber Teeth',
+    type: 'ancestry',
+    level: 1,
+    ancestryId: 'catfolk',
+    description:
+      'You have long, pronounced canines capable of delivering powerful bites. You gain a jaws unarmed attack that deals 1d6 piercing damage. Your jaws are in the brawling group and have the finesse trait.',
+  },
+  {
+    id: 'climbing-claws',
+    name: 'Climbing Claws',
+    type: 'ancestry',
+    level: 5,
+    ancestryId: 'catfolk',
+    description:
+      'Your claws are well-suited for climbing. You gain a climb Speed of 10 feet. If you already have a claw unarmed attack, your climb Speed increases to 15 feet.',
+  },
+  {
+    id: 'expanded-luck',
+    name: 'Expanded Luck',
+    type: 'ancestry',
+    level: 5,
+    ancestryId: 'catfolk',
+    prerequisites: "Cat's Luck",
+    description:
+      'Your luck is more reliable than most. You can use Cat\'s Luck when you fail a Fortitude or Will saving throw in addition to Reflex saves. You can still use it only once per day.',
+  },
+  {
+    id: 'light-paws',
+    name: 'Light Paws',
+    type: 'ancestry',
+    level: 5,
+    ancestryId: 'catfolk',
+    description:
+      'You move with the quiet grace of a stalking cat. You gain a +2 circumstance bonus to Stealth checks to Sneak, and you can Sneak at full Speed.',
+  },
+  {
+    id: 'springing-leaper',
+    name: 'Springing Leaper',
+    type: 'ancestry',
+    level: 5,
+    ancestryId: 'catfolk',
+    description:
+      'Your powerful legs let you make incredible jumps. You can High Jump and Long Jump as a single action without a Stride beforehand. You gain a +2 circumstance bonus to Athletics checks to Jump.',
+  },
+  {
+    id: 'catfolk-weapon-rake',
+    name: 'Catfolk Weapon Rake',
+    type: 'ancestry',
+    level: 5,
+    ancestryId: 'catfolk',
+    prerequisites: 'Catfolk Weapon Familiarity',
+    description:
+      'You know how to get the most out of catfolk weapons. Whenever you critically hit using a catfolk weapon or one of your claw unarmed attacks, you apply the weapon\'s critical specialization effect.',
+  },
+  {
+    id: 'predators-growl',
+    name: "Predator's Growl",
+    type: 'ancestry',
+    level: 9,
+    ancestryId: 'catfolk',
+    description:
+      'Your growl is terrifying, channeling the primal fear of a predator. You can Demoralize as a free action once per round when you successfully Strike a creature. The Demoralize attempt uses Intimidation as normal.',
+  },
+  {
+    id: 'shared-luck',
+    name: 'Shared Luck',
+    type: 'ancestry',
+    level: 9,
+    ancestryId: 'catfolk',
+    prerequisites: "Cat's Luck",
+    description:
+      'You can extend your feline fortune to your allies. When an ally within 30 feet fails a saving throw, you can use your reaction to grant them the benefits of Cat\'s Luck, allowing them to reroll the save. This uses your daily Cat\'s Luck.',
+  },
+  {
+    id: 'silent-step',
+    name: 'Silent Step',
+    type: 'ancestry',
+    level: 9,
+    ancestryId: 'catfolk',
+    description:
+      'You move with perfect silence. You no longer need to attempt Stealth checks to remain undetected while moving at half Speed or less. You can still Sneak at full Speed with the usual check.',
+  },
+  {
+    id: 'sense-for-trouble',
+    name: 'Sense for Trouble',
+    type: 'ancestry',
+    level: 9,
+    ancestryId: 'catfolk',
+    description:
+      'Your instincts warn you of danger before it strikes. You gain a +2 circumstance bonus to Perception checks for initiative. You are never flat-footed during the first round of combat.',
+  },
+  {
+    id: 'caterwaul',
+    name: 'Caterwaul',
+    type: 'ancestry',
+    level: 13,
+    ancestryId: 'catfolk',
+    description:
+      'You let out a blood-curdling scream that shakes the resolve of your enemies. As a 2-action activity, each enemy within 30 feet must attempt a Will save against your class DC or spell DC (whichever is higher). On a failure, they are frightened 2. On a critical failure, they are frightened 3 and fleeing for 1 round.',
+  },
+  {
+    id: 'catfolk-weapon-expertise',
+    name: 'Catfolk Weapon Expertise',
+    type: 'ancestry',
+    level: 13,
+    ancestryId: 'catfolk',
+    prerequisites: 'Catfolk Weapon Familiarity',
+    description:
+      'Your catfolk weapon training has become instinctive. Whenever you gain a class feature that grants you expert or greater proficiency in a given weapon or weapons, you also gain that proficiency in catfolk weapons in which you are trained.',
+  },
+  {
+    id: 'black-cat',
+    name: 'Black Cat',
+    type: 'ancestry',
+    level: 13,
+    ancestryId: 'catfolk',
+    description:
+      'Bad luck seems to follow those who wrong you. When a creature within 30 feet that you can see critically succeeds on a Strike against you, you can use your reaction to force the attacker to reroll the attack and use the worse result.',
+  },
+  {
+    id: 'reliable-luck',
+    name: 'Reliable Luck',
+    type: 'ancestry',
+    level: 17,
+    ancestryId: 'catfolk',
+    prerequisites: "Cat's Luck",
+    description:
+      'Your luck is seemingly inexhaustible. You can use Cat\'s Luck once per hour instead of once per day. In addition, when you use Cat\'s Luck, if the reroll is also a failure, you can use it a second time on the same save.',
+  },
+  {
+    id: 'ten-lives',
+    name: 'Ten Lives',
+    type: 'ancestry',
+    level: 17,
+    ancestryId: 'catfolk',
+    description:
+      'Even death has trouble keeping hold of you. Once per day, when you would die from damage, you instead drop to 1 Hit Point and gain the wounded 1 condition (or increase your wounded value by 1). You are then temporarily immune to this effect for 24 hours.',
+  },
+  {
+    id: 'elude-trouble',
+    name: 'Elude Trouble',
+    type: 'ancestry',
+    level: 17,
+    ancestryId: 'catfolk',
+    description:
+      'You can dodge out of harm\'s way with supernatural agility. When you are targeted by a ranged attack or an area effect, you can use your reaction to Step and then gain a +4 circumstance bonus to your AC or saving throw against the triggering effect.',
+  },
+
+  // ========================
   // Kineticist Class Feats (General)
   // ========================
   {

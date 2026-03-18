@@ -517,4 +517,80 @@ export const ancestries: Ancestry[] = [
       ...versatileHeritages,
     ],
   },
+  {
+    id: 'catfolk',
+    name: 'Catfolk',
+    description:
+      'Curious and gregarious wanderers, catfolk combine the features of felines and humanoids in both appearance and temperament. They enjoy learning new things, collecting new tales and trinkets, and ensuring their loved ones are safe and googley. Catfolk call themselves amurruns, although many consider this name to be private.',
+    hp: 8,
+    size: 'Medium',
+    speed: 25,
+    abilityBoosts: ['dex', 'cha', 'free'],
+    abilityFlaws: ['wis'],
+    languages: ['Common', 'Amurrun'],
+    traits: ['Catfolk', 'Humanoid'],
+    specialAbilities: [
+      'Low-Light Vision: You can see in dim light as though it were bright light.',
+      'Land on Your Feet: When you fall, you take only half the normal damage and don\'t land prone.',
+    ],
+    heritages: [
+      {
+        id: 'clawed-catfolk',
+        name: 'Clawed Catfolk',
+        description:
+          'Your family has particularly long, sharp claws capable of delivering bleeding wounds with a wicked swipe.',
+        benefits: 'You gain a claw unarmed attack that deals 1d6 slashing damage. Your claws are in the brawling group and have the agile, finesse, and unarmed traits.',
+      },
+      {
+        id: 'hunting-catfolk',
+        name: 'Hunting Catfolk',
+        description:
+          'You come from a long line of skilled hunters and trackers with a keen sense of smell.',
+        benefits: 'You gain imprecise scent with a range of 30 feet and a +2 circumstance bonus to Track a creature or object if you\'ve smelled it before.',
+      },
+      {
+        id: 'jungle-catfolk',
+        name: 'Jungle Catfolk',
+        description:
+          'You are descended from jungle stalkers and can move swiftly through scrub and underbrush.',
+        benefits: 'You ignore difficult terrain from undergrowth and similar natural plant growth. You gain a +2 circumstance bonus to Stealth checks in jungle or forest environments.',
+      },
+      {
+        id: 'nine-lives-catfolk',
+        name: 'Nine Lives Catfolk',
+        description:
+          'Your family always seems to bounce back from disaster through sheer luck. Other catfolk whisper you have nine lives.',
+        benefits: 'While dying, you don\'t add your dying value to the DC of recovery checks (DC is typically 10). You also gain the Diehard general feat.',
+      },
+      {
+        id: 'sharp-eared-catfolk',
+        name: 'Sharp-Eared Catfolk',
+        description:
+          'Born with big, expressive ears that move with your moods, you have exceptionally keen hearing.',
+        benefits: 'You gain a +2 circumstance bonus to locate undetected creatures you could hear within 30 feet with a Seek action. Once per round, you can Point Out a creature to all allies as a free action.',
+      },
+      {
+        id: 'flexible-catfolk',
+        name: 'Flexible Catfolk',
+        description:
+          'Your body is remarkably limber, and you can contort yourself into tight spaces and unusual positions that would be impossible for most humanoids.',
+        benefits: 'You gain a +2 circumstance bonus to Acrobatics checks to Squeeze through tight spaces and to Escape. You can Squeeze at half your Speed instead of 5 feet per round.',
+      },
+      {
+        id: 'liminal-catfolk',
+        name: 'Liminal Catfolk',
+        description:
+          'You have a closeness to the dimensional boundaries where realities thin, granting you an innate sensitivity to planar energies and extradimensional spaces.',
+        benefits: 'You can sense dimensional rifts and portals within 30 feet as an imprecise sense. You gain a +1 circumstance bonus to saves against extradimensional and teleportation effects.',
+      },
+      {
+        id: 'winter-catfolk',
+        name: 'Winter Catfolk',
+        description:
+          'You have a thick coat of fur that protects you from the cold, well-suited to frigid environments.',
+        benefits: 'You gain cold resistance equal to half your level (minimum 1). You treat environmental cold effects as if they were one step less extreme.',
+      },
+      ...versatileHeritages,
+    ],
+  },
 ]
