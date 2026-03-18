@@ -1,4 +1,64 @@
-import { Ancestry } from '../../../src/types'
+import { Ancestry, Heritage } from '../../../src/types'
+
+// Versatile heritages available to all ancestries
+const versatileHeritages: Heritage[] = [
+  {
+    id: 'aasimar',
+    name: 'Aasimar',
+    description:
+      'You descend from celestial beings or were touched by the divine radiance of the Upper Planes. Your heritage manifests in an inner light that suffuses your being, granting you resilience against holy forces and a connection to the celestial realms.',
+    benefits: 'Gain the Celestial trait. You gain resistance to holy damage equal to half your level (minimum 1), and you can cast light as a divine innate cantrip.',
+  },
+  {
+    id: 'tiefling',
+    name: 'Tiefling',
+    description:
+      'You carry the blood of fiends — devils, demons, or other creatures of the Lower Planes. This manifests in subtle or overt physical signs and grants you an affinity for fire and shadow, along with a commanding presence that unnerves others.',
+    benefits: 'Gain the Fiend trait. You gain resistance to fire damage equal to half your level (minimum 1), and you gain a +1 circumstance bonus to Intimidation checks.',
+  },
+  {
+    id: 'dhampir',
+    name: 'Dhampir',
+    description:
+      'You are the living offspring of a vampire or were touched by undeath in some way. You straddle the line between life and death, granting you unnatural resilience but an unusual relationship with healing magic — positive energy harms you while negative energy mends your wounds.',
+    benefits: 'Gain the Undead trait. Positive healing effects treat you as undead (harming instead of healing), while negative energy heals you. You gain darkvision and a +1 circumstance bonus to saves against death effects.',
+  },
+  {
+    id: 'changeling',
+    name: 'Changeling',
+    description:
+      'You are the offspring of a hag and a mortal, carrying fey-touched blood that grants you an intuitive sense for deception and hidden truths. Your hag heritage whispers to you in dreams, granting occult insight and a sharp awareness of your surroundings.',
+    benefits: 'Gain the Hag trait. You gain a +1 circumstance bonus to Perception checks and access to one occult innate cantrip of your choice (Charisma-based).',
+  },
+  {
+    id: 'duskwalker',
+    name: 'Duskwalker',
+    description:
+      'You were infused with the essence of the Boneyard — the realm between life and death — granting you a spiritual connection to the cycle of souls. You are naturally attuned to the presence of undead and possess a resilience against forces that would snuff out life.',
+    benefits: 'Gain the Spirit trait. You gain resistance to negative energy equal to half your level (minimum 1), and you gain a +1 circumstance bonus to checks and saves against undead creatures.',
+  },
+  {
+    id: 'geniekin',
+    name: 'Geniekin',
+    description:
+      'One of your ancestors was a genie or you were imbued with elemental energy from the Elemental Planes. Your elemental nature manifests as an affinity for a specific element — fire, water, air, or earth — granting you resistance and minor elemental abilities.',
+    benefits: 'Gain the Elemental trait. Choose an element (fire, water, air, or earth). You gain resistance to the associated damage type equal to half your level (minimum 1) and a minor elemental ability based on your choice.',
+  },
+  {
+    id: 'beastkin',
+    name: 'Beastkin',
+    description:
+      'You carry a primal connection to the animal kingdom, granting you bestial features and the ability to partially transform. Whether through a curse, blessing, or ancestral bloodline, your animal nature grants you natural weapons and heightened senses.',
+    benefits: 'Gain the Beast trait. You gain a natural unarmed attack (bite or claw) dealing 1d4 damage, and a +1 circumstance bonus to Perception checks involving scent or hearing.',
+  },
+  {
+    id: 'reflection',
+    name: 'Reflection',
+    description:
+      'You are a mirror-born entity — a duplicate, echo, or divergent copy of another being. Whether you emerged from a magical mirror, a planar rift, or an arcane experiment, your nature grants you an uncanny ability to mimic others and obscure your true identity.',
+    benefits: 'Gain the Reflection trait. You gain a +2 circumstance bonus to Deception checks to Impersonate and to Disguise yourself. Once per day, you can perfectly mimic a voice you have heard.',
+  },
+]
 
 export const ancestries: Ancestry[] = [
   {
@@ -52,6 +112,7 @@ export const ancestries: Ancestry[] = [
           'You are descended from people who braved the coldest climates, and the chill of winter has seeped into your blood. You gain cold resistance equal to half your level (minimum 1).',
         benefits: 'Cold resistance equal to half your level (minimum 1).',
       },
+      ...versatileHeritages,
     ],
   },
   {
@@ -106,6 +167,14 @@ export const ancestries: Ancestry[] = [
         benefits:
           'Heightened hearing lets you attempt a Perception check to Seek hidden or undetected creatures within 60 feet.',
       },
+      {
+        id: 'half-elf',
+        name: 'Half-Elf',
+        description:
+          'One of your parents was a human, blending elven grace with human adaptability. You gain the Human trait in addition to the Elf trait, allowing you to select feats from either ancestry.',
+        benefits: 'Gain the Human trait. You can select feats associated with either the Elf or Human ancestry.',
+      },
+      ...versatileHeritages,
     ],
   },
   {
@@ -161,6 +230,7 @@ export const ancestries: Ancestry[] = [
           'Your blood runs thick with the resilience of your ancestors, allowing you to shrug off toxins that would fell others. You gain poison resistance equal to half your level (minimum 1).',
         benefits: 'Poison resistance equal to half your level (minimum 1).',
       },
+      ...versatileHeritages,
     ],
   },
   {
@@ -217,6 +287,7 @@ export const ancestries: Ancestry[] = [
         benefits:
           'Ignore difficult terrain caused by plants and undergrowth.',
       },
+      ...versatileHeritages,
     ],
   },
   {
@@ -274,6 +345,7 @@ export const ancestries: Ancestry[] = [
         benefits:
           'Gain one arcane innate cantrip of your choice (Charisma-based).',
       },
+      ...versatileHeritages,
     ],
   },
   {
@@ -328,6 +400,7 @@ export const ancestries: Ancestry[] = [
           'You are remarkably tough, even by goblin standards, able to withstand blows that would flatten others your size. You gain 4 additional Hit Points from your ancestry instead of the normal amount.',
         benefits: 'Gain 4 additional Hit Points from your ancestry.',
       },
+      ...versatileHeritages,
     ],
   },
   {
@@ -377,6 +450,7 @@ export const ancestries: Ancestry[] = [
           'Long vines trail from your body, giving you exceptional reach and climbing ability. You gain a climb Speed of 10 feet.',
         benefits: 'Gain a climb Speed of 10 feet.',
       },
+      ...versatileHeritages,
     ],
   },
   {
@@ -433,6 +507,14 @@ export const ancestries: Ancestry[] = [
           'You were raised in a warrior tradition that honed your reflexes from a young age. You gain a +2 circumstance bonus to initiative rolls when using Perception.',
         benefits: '+2 circumstance bonus to initiative rolls using Perception.',
       },
+      {
+        id: 'half-orc',
+        name: 'Half-Orc',
+        description:
+          'One of your parents was a human, blending orcish resilience with human adaptability. You gain the Human trait in addition to the Orc trait, allowing you to select feats from either ancestry.',
+        benefits: 'Gain the Human trait. You can select feats associated with either the Orc or Human ancestry.',
+      },
+      ...versatileHeritages,
     ],
   },
 ]
