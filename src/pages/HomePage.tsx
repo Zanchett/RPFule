@@ -24,7 +24,7 @@ import { useRefreshOnMount } from '../lib/useRefreshOnMount'
 import * as api from '../lib/api'
 
 const SYSTEM_THUMBNAILS: Record<string, string> = {
-  pf2e: 'https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1681825893i/126850011.jpg'
+  pf2e: 'src\assets\images\pathfinderthumb.jpg'
 }
 
 export function HomePage(): JSX.Element {
