@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { supabase, ensureSession } from '../lib/supabase'
+import { supabase, ensureSession, dbg } from '../lib/supabase'
 import { Campaign, CampaignMember, Character } from '../types'
 import * as api from '../lib/api'
 import { withRetry } from '../lib/retry'
@@ -115,17 +115,28 @@ export const useCampaignStore = create<CampaignStore>((set, get) => ({
   },
 
   loadCampaignDetail: async (id) => {
+    const t0 = Date.now()
     // Only show loading spinner on initial load — not on refreshes
-    // This prevents the spinner flash when tab-switching or real-time events fire
     const isInitialLoad = !get().currentCampaign || get().currentCampaign?.id !== id
+    dbg('campaign', `loadCampaignDetail START (id=${id}, initial=${isInitialLoad})`)
     if (isInitialLoad) {
       set({ loading: true })
     }
 
     try {
-      // Ensure JWT is fresh before querying — prevents expired token failures after idle
-      await ensureSession()
-      // Load campaign first — if this fails, nothing else can proceed
+      // Ensure JWT is fresh before querying
+      dbg('campaign', 'loadCampaignDetail: calling ensureSession...')
+      const sessionOk = await ensureSession()
+      dbg('campaign', `loadCampaignDetail: ensureSession returned ${sessionOk} (${Date.now() - t0}ms)`)
+
+      if (!sessionOk) {
+        dbg('campaign', 'loadCampaignDetail: ABORTING — no valid session')
+        set({ loading: false })
+        return
+      }
+
+      // Load campaign first
+      dbg('campaign', 'loadCampaignDetail: querying campaign row...')
       const { data: campaign, error: campaignError } = await withRetry(async () => {
         const res = await supabase
           .from('campaigns')
@@ -137,15 +148,16 @@ export const useCampaignStore = create<CampaignStore>((set, get) => ({
       })
 
       if (campaignError || !campaign) {
-        console.error('Failed to load campaign:', campaignError)
+        dbg('campaign', `loadCampaignDetail: CAMPAIGN QUERY FAILED (${Date.now() - t0}ms)`, campaignError)
         set({ loading: false })
         return
       }
 
+      dbg('campaign', `loadCampaignDetail: campaign loaded OK (${Date.now() - t0}ms)`)
       set({ currentCampaign: rowToCampaign(campaign) })
 
-      // Load all remaining data in parallel with Promise.allSettled
-      // so one failure doesn't block the others
+      // Load all remaining data in parallel
+      dbg('campaign', 'loadCampaignDetail: loading members/characters/codes in parallel...')
       const [membersResult, charactersResult, codesResult] = await Promise.allSettled([
         // Members — batch profile query instead of N+1
         (async () => {
@@ -193,16 +205,18 @@ export const useCampaignStore = create<CampaignStore>((set, get) => ({
       ])
 
       // Apply results — use whatever succeeded
+      dbg('campaign', `loadCampaignDetail: parallel done (${Date.now() - t0}ms) — members=${membersResult.status}, chars=${charactersResult.status}, codes=${codesResult.status}`)
+
       if (membersResult.status === 'fulfilled') {
         set({ members: membersResult.value })
       } else {
-        console.error('Failed to load members:', membersResult.reason)
+        dbg('campaign', 'loadCampaignDetail: MEMBERS FAILED', membersResult.reason)
       }
 
       if (charactersResult.status === 'fulfilled') {
         set({ campaignCharacters: charactersResult.value })
       } else {
-        console.error('Failed to load campaign characters:', charactersResult.reason)
+        dbg('campaign', 'loadCampaignDetail: CHARACTERS FAILED', charactersResult.reason)
       }
 
       if (codesResult.status === 'fulfilled') {
@@ -211,9 +225,9 @@ export const useCampaignStore = create<CampaignStore>((set, get) => ({
         console.error('Failed to load invite codes:', codesResult.reason)
       }
     } catch (err) {
-      console.error('Failed to load campaign detail:', err)
+      dbg('campaign', `loadCampaignDetail: EXCEPTION (${Date.now() - t0}ms)`, err)
     } finally {
-      // ALWAYS set loading false at the end, not after first query
+      dbg('campaign', `loadCampaignDetail: DONE — setting loading=false (${Date.now() - t0}ms)`)
       set({ loading: false })
     }
   },

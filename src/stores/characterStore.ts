@@ -4,7 +4,7 @@ import { Character, AbilityId, GameSystem } from '../types'
 import { getGameSystem, getDefaultGameSystem } from '../../game-systems'
 import * as api from '../lib/api'
 import { withRetry } from '../lib/retry'
-import { supabase } from '../lib/supabase'
+import { supabase, dbg } from '../lib/supabase'
 
 interface CharacterListItem {
   id: string
@@ -157,9 +157,12 @@ export const useCharacterStore = create<CharacterStore>((set, get) => ({
   },
 
   loadCharacter: async (id: string) => {
+    const t0 = Date.now()
+    dbg('char', `loadCharacter START (id=${id})`)
     set({ characterLoading: true, characterError: null })
     try {
       const data = await withRetry(() => api.loadCharacter(id))
+      dbg('char', `loadCharacter: data loaded OK (${Date.now() - t0}ms)`)
       const system = getGameSystem(data.gameSystemId) ?? getDefaultGameSystem()
 
       // Migration: fill defaults for any missing live-play fields (old saves)
@@ -182,6 +185,7 @@ export const useCharacterStore = create<CharacterStore>((set, get) => ({
         migrated.currentHP = system.calculateHP(migrated)
       }
 
+      dbg('char', `loadCharacter: DONE OK (${Date.now() - t0}ms)`)
       set({
         character: migrated,
         gameSystem: system,
@@ -190,7 +194,7 @@ export const useCharacterStore = create<CharacterStore>((set, get) => ({
         characterError: null
       })
     } catch (err) {
-      console.error('Failed to load character:', err)
+      dbg('char', `loadCharacter: FAILED (${Date.now() - t0}ms)`, err)
       set({
         characterLoading: false,
         characterError: err instanceof Error ? err.message : 'Failed to load character'
@@ -202,17 +206,22 @@ export const useCharacterStore = create<CharacterStore>((set, get) => ({
     const { character, saveStatus: currentStatus } = get()
     if (!character) return
     // Prevent concurrent saves (manual vs auto-save race)
-    if (currentStatus === 'saving') return
+    if (currentStatus === 'saving') {
+      dbg('char', 'saveCharacter: SKIPPED — already saving')
+      return
+    }
+    dbg('char', 'saveCharacter: START')
     const updated = { ...character, updatedAt: new Date().toISOString() }
     isSaving = true
     set({ character: updated, saveStatus: 'saving', saveError: null })
     isSaving = false
     try {
+      const st0 = Date.now()
       await withRetry(() => withTimeout(api.saveCharacter(updated), 6000), { retries: 1 })
+      dbg('char', `saveCharacter: OK (${Date.now() - st0}ms)`)
       isSaving = true
       set({ isDirty: false, saveStatus: 'saved', saveError: null })
       isSaving = false
-      // Reset status after 3 seconds
       setTimeout(() => {
         const { saveStatus } = get()
         if (saveStatus === 'saved') set({ saveStatus: 'idle' })
@@ -220,7 +229,7 @@ export const useCharacterStore = create<CharacterStore>((set, get) => ({
     } catch (err) {
       isSaving = false
       const message = err instanceof Error ? err.message : 'Save failed'
-      console.error('Save failed:', err)
+      dbg('char', `saveCharacter: FAILED — ${message}`, err)
       set({ saveStatus: 'error', saveError: message })
     }
   },
@@ -707,12 +716,14 @@ function startAutoSave(): void {
   autoSaveInterval = setInterval(async () => {
     const { character, isDirty, saveStatus } = useCharacterStore.getState()
     if (character && isDirty && saveStatus !== 'saving') {
+      dbg('char', 'auto-save: TRIGGERED')
       try {
         isSaving = true
         useCharacterStore.setState({ saveStatus: 'saving', saveError: null })
         const updated = { ...character, updatedAt: new Date().toISOString() }
-        // Use withRetry so transient network issues don't show "Auto-save failed"
+        const at0 = Date.now()
         await withRetry(() => withTimeout(api.saveCharacter(updated), 6000), { retries: 1 })
+        dbg('char', `auto-save: OK (${Date.now() - at0}ms)`)
         useCharacterStore.setState({ isDirty: false, saveStatus: 'saved', saveError: null, character: updated })
         isSaving = false
         setTimeout(() => {
@@ -721,7 +732,7 @@ function startAutoSave(): void {
         }, 3000)
       } catch (err) {
         isSaving = false
-        console.error('Auto-save failed:', err)
+        dbg('char', 'auto-save: FAILED', err)
         useCharacterStore.setState({
           saveStatus: 'error',
           saveError: err instanceof Error ? err.message : 'Auto-save failed'
