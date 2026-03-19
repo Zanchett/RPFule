@@ -2,29 +2,41 @@ import { supabase } from './supabase'
 import { Character, AbilityId } from '../types'
 import { withRetry } from './retry'
 
+// Helper: wrap a promise with a timeout to prevent hanging forever
+function withTimeout<T>(promise: Promise<T>, ms: number, label = 'Operation'): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error(`${label} timed out`)), ms)
+    )
+  ])
+}
+
 // Get the current user ID, handling expired sessions gracefully.
-// Uses the fast local session cache when valid, falls back to network refresh.
+// Has its own timeout to prevent hanging if Supabase auth is slow.
 async function getCurrentUserId(): Promise<string> {
-  // First try the fast path: local session cache
-  const { data: { session } } = await supabase.auth.getSession()
+  return withTimeout((async () => {
+    // First try the fast path: local session cache
+    const { data: { session } } = await supabase.auth.getSession()
 
-  if (session?.user?.id) {
-    // Check if token is still valid (not expired)
-    const expiresAt = session.expires_at // Unix timestamp in seconds
-    const now = Math.floor(Date.now() / 1000)
-    if (expiresAt && expiresAt > now + 30) {
-      // Token valid for at least 30 more seconds
-      return session.user.id
+    if (session?.user?.id) {
+      // Check if token is still valid (not expired)
+      const expiresAt = session.expires_at // Unix timestamp in seconds
+      const now = Math.floor(Date.now() / 1000)
+      if (expiresAt && expiresAt > now + 30) {
+        // Token valid for at least 30 more seconds
+        return session.user.id
+      }
+      // Token expired or about to expire — force a refresh
+      const { data: { session: refreshed } } = await supabase.auth.refreshSession()
+      if (refreshed?.user?.id) return refreshed.user.id
     }
-    // Token expired or about to expire — force a refresh
-    const { data: { session: refreshed } } = await supabase.auth.refreshSession()
-    if (refreshed?.user?.id) return refreshed.user.id
-  }
 
-  // Fallback: network call to verify
-  const { data: { user }, error } = await supabase.auth.getUser()
-  if (error || !user) throw new Error('Not authenticated')
-  return user.id
+    // Fallback: network call to verify
+    const { data: { user }, error } = await supabase.auth.getUser()
+    if (error || !user) throw new Error('Not authenticated')
+    return user.id
+  })(), 8000, 'Auth')
 }
 
 interface CharacterRow {

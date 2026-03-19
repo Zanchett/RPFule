@@ -691,3 +691,27 @@ useCharacterStore.subscribe((state, prevState) => {
     stopAutoSave()
   }
 })
+
+// Safety net: if saveStatus gets stuck at 'saving' for >15 seconds, reset it
+// This prevents infinite loading spinners on the save button
+let saveStuckTimer: ReturnType<typeof setTimeout> | null = null
+useCharacterStore.subscribe((state, prevState) => {
+  if (state.saveStatus === 'saving' && prevState.saveStatus !== 'saving') {
+    // Started saving — set a watchdog timer
+    if (saveStuckTimer) clearTimeout(saveStuckTimer)
+    saveStuckTimer = setTimeout(() => {
+      const { saveStatus } = useCharacterStore.getState()
+      if (saveStatus === 'saving') {
+        console.warn('Save stuck for 15 seconds — resetting status')
+        isSaving = false
+        useCharacterStore.setState({ saveStatus: 'error', saveError: 'Save timed out — please try again' })
+      }
+    }, 15000)
+  } else if (state.saveStatus !== 'saving' && prevState.saveStatus === 'saving') {
+    // Save finished — clear the watchdog
+    if (saveStuckTimer) {
+      clearTimeout(saveStuckTimer)
+      saveStuckTimer = null
+    }
+  }
+})

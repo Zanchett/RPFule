@@ -9,6 +9,7 @@ import { NavBar } from '../components/NavBar'
 import { Character, ABILITY_NAMES, ALL_ABILITIES, AbilityId, Equipment, EquipmentCategory } from '../types'
 import { getGameSystem, getDefaultGameSystem } from '../../game-systems'
 import * as api from '../lib/api'
+import { withRetry } from '../lib/retry'
 import { supabase } from '../lib/supabase'
 
 function formatPrice(copper: number): string {
@@ -61,7 +62,7 @@ export function DMCharacterSheet(): JSX.Element {
   useEffect(() => {
     if (!characterId) return
     setLoading(true)
-    api.loadCharacter(characterId)
+    withRetry(() => api.loadCharacter(characterId))
       .then((data) => {
         const migrated: Character = {
           ...data,
@@ -128,7 +129,7 @@ export function DMCharacterSheet(): JSX.Element {
     isSavingRef.current = true
     setSaveStatus('saving')
     try {
-      await api.saveDMEdits(characterId, {
+      await withRetry(() => api.saveDMEdits(characterId, {
         currentHP: char.currentHP,
         tempHP: char.tempHP,
         goldRemaining: char.goldRemaining,
@@ -137,7 +138,7 @@ export function DMCharacterSheet(): JSX.Element {
         heroPoints: char.heroPoints,
         conditions: char.conditions,
         spellSlotsUsed: char.spellSlotsUsed
-      })
+      }))
       setSaveStatus('saved')
       if (savedBadgeRef.current) clearTimeout(savedBadgeRef.current)
       savedBadgeRef.current = setTimeout(() => setSaveStatus('idle'), 3000)
