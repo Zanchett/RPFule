@@ -9,6 +9,7 @@ import { NavBar } from '../components/NavBar'
 import { Character, ABILITY_NAMES, ALL_ABILITIES, AbilityId, Equipment, EquipmentCategory } from '../types'
 import { getGameSystem, getDefaultGameSystem } from '../../game-systems'
 import * as api from '../lib/api'
+import { supabase } from '../lib/supabase'
 
 function formatPrice(copper: number): string {
   if (copper >= 100) {
@@ -52,6 +53,9 @@ export function DMCharacterSheet(): JSX.Element {
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const savedBadgeRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  // Track whether we're currently saving — to prevent real-time subscription from overwriting
+  const isSavingRef = useRef(false)
+
   // Load character on mount
   useEffect(() => {
     if (!characterId) return
@@ -73,11 +77,51 @@ export function DMCharacterSheet(): JSX.Element {
       })
       .catch((err) => console.error('Failed to load character:', err))
       .finally(() => setLoading(false))
+
+    // Real-time subscription: sync character changes from other sources (player edits, shop purchases)
+    const channel = supabase
+      .channel(`dm-char:${characterId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'characters',
+          filter: `id=eq.${characterId}`,
+        },
+        () => {
+          // Only reload if WE are not the ones saving (prevents overwriting our own edits)
+          if (!isSavingRef.current) {
+            api.loadCharacter(characterId).then((data) => {
+              setCharacter((prev) => {
+                if (!prev) return prev
+                return {
+                  ...prev,
+                  currentHP: data.currentHP ?? prev.currentHP,
+                  tempHP: data.tempHP ?? prev.tempHP,
+                  heroPoints: data.heroPoints ?? prev.heroPoints,
+                  conditions: data.conditions ?? prev.conditions,
+                  goldRemaining: data.goldRemaining ?? prev.goldRemaining,
+                  purchasedEquipment: data.purchasedEquipment ?? prev.purchasedEquipment,
+                  focusPointsUsed: data.focusPointsUsed ?? prev.focusPointsUsed,
+                  spellSlotsUsed: data.spellSlotsUsed ?? prev.spellSlotsUsed,
+                }
+              })
+            }).catch(() => { /* ignore — stale data is better than crashing */ })
+          }
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
   }, [characterId])
 
-  // Auto-save with debounce on character change
+  // Save DM fields immediately (no debounce — changes should be instant)
   const saveDMFields = useCallback(async (char: Character) => {
     if (!characterId) return
+    isSavingRef.current = true
     setSaveStatus('saving')
     try {
       await api.saveDMEdits(characterId, {
@@ -96,13 +140,17 @@ export function DMCharacterSheet(): JSX.Element {
     } catch (err) {
       console.error('DM save failed:', err)
       setSaveStatus('error')
+    } finally {
+      // Small delay before allowing real-time updates to flow in again
+      // to prevent the subscription from overwriting our just-saved data
+      setTimeout(() => { isSavingRef.current = false }, 1000)
     }
   }, [characterId])
 
-  // Debounced save: triggers 1.5s after last edit
+  // Short debounce (300ms) to batch rapid edits like typing numbers
   const scheduleSave = useCallback((char: Character) => {
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current)
-    saveTimeoutRef.current = setTimeout(() => saveDMFields(char), 1500)
+    saveTimeoutRef.current = setTimeout(() => saveDMFields(char), 300)
   }, [saveDMFields])
 
   // Helper: update character and schedule save

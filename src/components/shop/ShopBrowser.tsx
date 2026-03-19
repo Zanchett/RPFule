@@ -4,6 +4,7 @@ import {
   Select, Loader, Center, Modal
 } from '@mantine/core'
 import { useShopStore } from '../../stores/shopStore'
+import { useCampaignStore } from '../../stores/campaignStore'
 import { CampaignShop, Character, EquipmentCategory, Equipment } from '../../types'
 import { getGameSystem, getDefaultGameSystem } from '../../../game-systems'
 import * as api from '../../lib/api'
@@ -281,11 +282,11 @@ export function ShopBrowser({
   characters: Character[]
 }) {
   const { shops, loading, loadShops, subscribeToShops } = useShopStore()
+  const updateCharacterLocally = useCampaignStore((s) => s.updateCharacterLocally)
   const [selectedCharId, setSelectedCharId] = useState<string | null>(
     characters.length === 1 ? characters[0].id : null
   )
   const [openShop, setOpenShop] = useState<CampaignShop | null>(null)
-  const [localCharacters, setLocalCharacters] = useState(characters)
 
   useEffect(() => {
     loadShops(campaignId)
@@ -293,17 +294,13 @@ export function ShopBrowser({
     return unsub
   }, [campaignId, loadShops, subscribeToShops])
 
-  useEffect(() => {
-    setLocalCharacters(characters)
-  }, [characters])
-
   const visibleShops = shops.filter((s) => s.isVisible)
-  const selectedChar = localCharacters.find((c) => c.id === selectedCharId)
+  // Read characters directly from props (backed by campaign store) — no stale local copy
+  const selectedChar = characters.find((c) => c.id === selectedCharId)
 
   const handleCharacterUpdate = (updated: Character) => {
-    setLocalCharacters((prev) =>
-      prev.map((c) => (c.id === updated.id ? updated : c))
-    )
+    // Update the campaign store directly — this is the single source of truth
+    updateCharacterLocally(updated)
   }
 
   if (loading && shops.length === 0) {
@@ -333,7 +330,7 @@ export function ShopBrowser({
           placeholder="Select a character"
           value={selectedCharId}
           onChange={setSelectedCharId}
-          data={localCharacters.map((c) => ({
+          data={characters.map((c) => ({
             value: c.id,
             label: `${c.name || 'Unnamed'} (${formatPrice(c.goldRemaining)} gold)`,
           }))}

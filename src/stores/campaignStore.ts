@@ -21,6 +21,8 @@ interface CampaignStore {
   leaveCampaign: (campaignId: string) => Promise<void>
   removeMember: (campaignId: string, userId: string) => Promise<void>
   updateCampaign: (id: string, name: string, description: string) => Promise<void>
+  updateCharacterLocally: (updated: Character) => void
+  reloadCampaignCharacters: (campaignId: string) => Promise<void>
   subscribeToCampaign: (campaignId: string) => () => void
 }
 
@@ -274,6 +276,25 @@ export const useCampaignStore = create<CampaignStore>((set, get) => ({
     }))
   },
 
+  // Update a single character in the store (for local optimistic updates from shop/DM edits)
+  updateCharacterLocally: (updated: Character) => {
+    set((state) => ({
+      campaignCharacters: state.campaignCharacters.map((c) =>
+        c.id === updated.id ? updated : c
+      )
+    }))
+  },
+
+  // Reload just the characters for a campaign (lightweight, doesn't reload everything)
+  reloadCampaignCharacters: async (campaignId: string) => {
+    try {
+      const characters = await withRetry(() => api.listCampaignCharacters(campaignId))
+      set({ campaignCharacters: characters })
+    } catch (err) {
+      console.error('Failed to reload campaign characters:', err)
+    }
+  },
+
   // Real-time subscription for campaign members — DM sees players join/leave live
   subscribeToCampaign: (campaignId) => {
     const channel = supabase
@@ -287,23 +308,40 @@ export const useCampaignStore = create<CampaignStore>((set, get) => ({
           filter: `campaign_id=eq.${campaignId}`,
         },
         () => {
-          // Reload campaign detail when members change
+          // Reload campaign detail when members join/leave
           get().loadCampaignDetail(campaignId)
         }
       )
       .on(
         'postgres_changes',
         {
-          event: '*',
+          event: 'INSERT',
           schema: 'public',
           table: 'characters',
           filter: `campaign_id=eq.${campaignId}`,
         },
         () => {
-          // Reload when characters are assigned/unassigned
-          get().loadCampaignDetail(campaignId)
+          // Only reload when characters are ASSIGNED to the campaign (not on every data update)
+          get().reloadCampaignCharacters(campaignId)
         }
       )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'characters',
+          filter: `campaign_id=eq.${campaignId}`,
+        },
+        () => {
+          // Reload when characters are REMOVED from campaign
+          get().reloadCampaignCharacters(campaignId)
+        }
+      )
+      // NOTE: We intentionally do NOT listen for UPDATE events on the characters table.
+      // UPDATE events fire on every HP/gold/equipment change (DM edits, shop purchases).
+      // Reloading on those would overwrite local optimistic updates and cause race conditions.
+      // Instead, components use subscribeToCharacter() for real-time field-level syncing.
       .subscribe()
 
     return () => {
