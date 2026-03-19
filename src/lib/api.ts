@@ -2,16 +2,26 @@ import { supabase } from './supabase'
 import { Character, AbilityId } from '../types'
 import { withRetry } from './retry'
 
-// Cache the current user to avoid network round-trips on every save.
-// supabase.auth.getUser() hits the network every call, which is slow
-// and fails if there's any transient issue.
-// supabase.auth.getSession() reads from local storage — much faster.
+// Get the current user ID, handling expired sessions gracefully.
+// Uses the fast local session cache when valid, falls back to network refresh.
 async function getCurrentUserId(): Promise<string> {
   // First try the fast path: local session cache
   const { data: { session } } = await supabase.auth.getSession()
-  if (session?.user?.id) return session.user.id
 
-  // Fallback: network call to verify (handles edge cases like token refresh)
+  if (session?.user?.id) {
+    // Check if token is still valid (not expired)
+    const expiresAt = session.expires_at // Unix timestamp in seconds
+    const now = Math.floor(Date.now() / 1000)
+    if (expiresAt && expiresAt > now + 30) {
+      // Token valid for at least 30 more seconds
+      return session.user.id
+    }
+    // Token expired or about to expire — force a refresh
+    const { data: { session: refreshed } } = await supabase.auth.refreshSession()
+    if (refreshed?.user?.id) return refreshed.user.id
+  }
+
+  // Fallback: network call to verify
   const { data: { user }, error } = await supabase.auth.getUser()
   if (error || !user) throw new Error('Not authenticated')
   return user.id

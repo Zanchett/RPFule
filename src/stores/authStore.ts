@@ -53,7 +53,20 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       }
 
       // Listen for auth changes — store subscription to prevent leaks
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+        if (event === 'TOKEN_REFRESHED') {
+          // Token was refreshed successfully — update user reference
+          if (session?.user) {
+            set({ user: session.user })
+          }
+          return
+        }
+
+        if (event === 'SIGNED_OUT') {
+          set({ user: null, profile: null })
+          return
+        }
+
         if (session?.user) {
           // Wrap in try/catch so profile failure doesn't null a valid user
           let profile: Profile | null = null
