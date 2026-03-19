@@ -1,42 +1,13 @@
 import { supabase, ensureSession } from './supabase'
 import { Character, AbilityId } from '../types'
-import { withRetry } from './retry'
 
-// Helper: wrap a promise with a timeout to prevent hanging forever
-function withTimeout<T>(promise: Promise<T>, ms: number, label = 'Operation'): Promise<T> {
-  return Promise.race([
-    promise,
-    new Promise<T>((_, reject) =>
-      setTimeout(() => reject(new Error(`${label} timed out`)), ms)
-    )
-  ])
-}
-
-// Get the current user ID. Fast path: read from local session cache (~0ms).
-// Only hits the network if the token is expired and needs a refresh.
-// Timeout: 5s max to prevent blocking the UI.
+// Get the current user ID. Ensures session is valid first (handles expired tokens).
+// Fast path: if session was verified recently, no network call needed (~0ms).
 async function getCurrentUserId(): Promise<string> {
-  return withTimeout((async () => {
-    // Fast path: local session (no network call)
-    const { data: { session } } = await supabase.auth.getSession()
-
-    if (session?.user?.id) {
-      const expiresAt = session.expires_at ?? 0
-      const now = Math.floor(Date.now() / 1000)
-      if (expiresAt > now + 30) {
-        // Token valid — instant return
-        return session.user.id
-      }
-
-      // Token expired or nearly expired — refresh it
-      // The visibility change handler usually prevents this, but just in case
-      const { data: { session: refreshed } } = await supabase.auth.refreshSession()
-      if (refreshed?.user?.id) return refreshed.user.id
-    }
-
-    // No session at all — user needs to re-login
-    throw new Error('Not authenticated')
-  })(), 5000, 'Auth')
+  await ensureSession()
+  const { data: { session } } = await supabase.auth.getSession()
+  if (session?.user?.id) return session.user.id
+  throw new Error('Not authenticated')
 }
 
 interface CharacterRow {
@@ -160,6 +131,7 @@ export async function saveCharacter(character: Character): Promise<void> {
 }
 
 export async function loadCharacter(id: string): Promise<Character> {
+  await ensureSession()
   const { data, error } = await supabase
     .from('characters')
     .select('*')
@@ -202,6 +174,7 @@ export async function saveDMEdits(
     spellSlotsUsed?: Record<number, number>
   }
 ): Promise<void> {
+  await ensureSession()
   // Load current row to merge JSONB data
   const { data: current, error: loadError } = await supabase
     .from('characters')
@@ -231,6 +204,7 @@ export async function saveDMEdits(
 
 // Campaign-specific: load all characters in a campaign
 export async function listCampaignCharacters(campaignId: string): Promise<Character[]> {
+  await ensureSession()
   const { data, error } = await supabase
     .from('characters')
     .select('*')

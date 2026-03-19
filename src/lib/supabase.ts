@@ -21,10 +21,30 @@ export const supabase = createClient(
 
 /**
  * Ensure the Supabase session is alive and the token is fresh.
- * Call this before any critical operation after the tab has been idle.
- * Returns true if session is valid, false if user needs to re-login.
+ * Call this before any critical Supabase query to prevent expired-token failures.
+ *
+ * Smart caching: If the session was verified in the last 30 seconds, returns
+ * immediately without any network call. Multiple concurrent calls share the
+ * same in-flight promise (deduplication).
  */
-export async function ensureSession(): Promise<boolean> {
+let lastEnsure = 0
+let ensurePromise: Promise<boolean> | null = null
+
+export function ensureSession(): Promise<boolean> {
+  // Fast path: session was verified recently — no work needed
+  const now = Date.now()
+  if (now - lastEnsure < 30_000) return Promise.resolve(true)
+
+  // Dedup: if there's already an in-flight ensureSession, reuse it
+  if (ensurePromise) return ensurePromise
+
+  ensurePromise = _doEnsureSession().finally(() => {
+    ensurePromise = null
+  })
+  return ensurePromise
+}
+
+async function _doEnsureSession(): Promise<boolean> {
   try {
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) return false
@@ -35,9 +55,14 @@ export async function ensureSession(): Promise<boolean> {
     // If token expires in less than 5 minutes, proactively refresh it
     if (expiresAt - now < 300) {
       const { data: { session: refreshed } } = await supabase.auth.refreshSession()
-      return !!refreshed
+      if (refreshed) {
+        lastEnsure = Date.now()
+        return true
+      }
+      return false
     }
 
+    lastEnsure = Date.now()
     return true
   } catch {
     return false
@@ -49,18 +74,11 @@ export async function ensureSession(): Promise<boolean> {
 // the browser throttles timers in background tabs, which can cause
 // Supabase's auto-refresh to miss its window.
 if (typeof document !== 'undefined') {
-  let lastRefresh = Date.now()
-
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') {
-      // Only refresh if it's been more than 30 seconds since last check
-      const elapsed = Date.now() - lastRefresh
-      if (elapsed > 30_000) {
-        lastRefresh = Date.now()
-        ensureSession().catch(() => {
-          // Silently fail — the next actual API call will handle auth errors
-        })
-      }
+      // Force a fresh check by clearing the cache timestamp
+      lastEnsure = 0
+      ensureSession().catch(() => {})
     }
   })
 }

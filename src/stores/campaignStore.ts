@@ -1,20 +1,15 @@
 import { create } from 'zustand'
-import { supabase } from '../lib/supabase'
+import { supabase, ensureSession } from '../lib/supabase'
 import { Campaign, CampaignMember, Character } from '../types'
 import * as api from '../lib/api'
 import { withRetry } from '../lib/retry'
 
-// Get user ID with retry — handles race condition where auth hasn't fully initialized yet
+// Ensure session is alive, then return user ID.
+// This is the SINGLE gate that prevents expired-token queries.
 async function getUserId(): Promise<string | null> {
+  await ensureSession()
   const { data: { session } } = await supabase.auth.getSession()
-  if (session?.user?.id) return session.user.id
-  // If no session, try refreshing (handles expired tokens)
-  try {
-    const { data: { session: refreshed } } = await supabase.auth.refreshSession()
-    return refreshed?.user?.id ?? null
-  } catch {
-    return null
-  }
+  return session?.user?.id ?? null
 }
 
 interface CampaignStore {
@@ -128,6 +123,8 @@ export const useCampaignStore = create<CampaignStore>((set, get) => ({
     }
 
     try {
+      // Ensure JWT is fresh before querying — prevents expired token failures after idle
+      await ensureSession()
       // Load campaign first — if this fails, nothing else can proceed
       const { data: campaign, error: campaignError } = await withRetry(async () => {
         const res = await supabase

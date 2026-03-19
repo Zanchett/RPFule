@@ -1,4 +1,4 @@
-import { supabase } from './supabase'
+import { supabase, ensureSession } from './supabase'
 import { CampaignShop, ShopInventoryItem } from '../types'
 
 function rowToShop(row: Record<string, unknown>): CampaignShop {
@@ -15,6 +15,7 @@ function rowToShop(row: Record<string, unknown>): CampaignShop {
 }
 
 export async function loadShops(campaignId: string): Promise<CampaignShop[]> {
+  await ensureSession()
   const { data, error } = await supabase
     .from('campaign_shops')
     .select('*')
