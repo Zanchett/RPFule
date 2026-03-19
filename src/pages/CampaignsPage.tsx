@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Box, Container, Stack, Title, Text, Button, Group, Badge,
@@ -7,6 +7,7 @@ import {
 import { useCampaignStore } from '../stores/campaignStore'
 import { NavBar } from '../components/NavBar'
 import { getAllGameSystems } from '../../game-systems'
+import { useRefreshOnMount } from '../lib/useRefreshOnMount'
 
 export function CampaignsPage(): JSX.Element {
   const navigate = useNavigate()
@@ -23,9 +24,8 @@ export function CampaignsPage(): JSX.Element {
 
   const allSystems = getAllGameSystems()
 
-  useEffect(() => {
-    loadCampaigns()
-  }, [loadCampaigns])
+  // Always re-fetch on mount and tab visibility change
+  useRefreshOnMount(() => { loadCampaigns() })
 
   const handleCreate = async (): Promise<void> => {
     setLoading(true)

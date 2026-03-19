@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   Box, Container, Stack, Title, Text, Button, Group, Badge,
@@ -26,16 +26,33 @@ export function CampaignDetailPage(): JSX.Element {
   const [editName, setEditName] = useState('')
   const [editDesc, setEditDesc] = useState('')
   const [confirmLeave, setConfirmLeave] = useState(false)
+  const [loadError, setLoadError] = useState(false)
 
   const isDM = currentCampaign?.dmUserId === user?.id
 
+  const loadData = useCallback(() => {
+    if (!id) return
+    setLoadError(false)
+    loadCampaignDetail(id).catch(() => setLoadError(true))
+  }, [id, loadCampaignDetail])
+
   useEffect(() => {
     if (!id) return
-    loadCampaignDetail(id)
+    loadData()
     // Subscribe to real-time campaign changes (members joining/leaving, characters assigned)
     const unsubscribe = subscribeToCampaign(id)
-    return () => { unsubscribe() }
-  }, [id, loadCampaignDetail, subscribeToCampaign])
+
+    // Refresh when tab becomes visible again
+    const handleVisibility = (): void => {
+      if (document.visibilityState === 'visible') loadData()
+    }
+    document.addEventListener('visibilitychange', handleVisibility)
+
+    return () => {
+      unsubscribe()
+      document.removeEventListener('visibilitychange', handleVisibility)
+    }
+  }, [id, loadData, subscribeToCampaign])
 
   useEffect(() => {
     if (currentCampaign) {
@@ -43,6 +60,29 @@ export function CampaignDetailPage(): JSX.Element {
       setEditDesc(currentCampaign.description)
     }
   }, [currentCampaign])
+
+  if (loadError && !currentCampaign) {
+    return (
+      <Box style={{ minHeight: '100vh', background: '#120d06' }}>
+        <NavBar />
+        <Center h="60vh">
+          <Stack align="center" gap="md">
+            <Text style={{ color: '#e85d5d', fontFamily: '"Cinzel", serif' }}>
+              Failed to load campaign
+            </Text>
+            <Group>
+              <Button variant="outline" color="yellow" onClick={loadData}>
+                Retry
+              </Button>
+              <Button variant="subtle" color="gray" onClick={() => navigate('/campaigns')}>
+                Back to Campaigns
+              </Button>
+            </Group>
+          </Stack>
+        </Center>
+      </Box>
+    )
+  }
 
   if (loading || !currentCampaign) {
     return (

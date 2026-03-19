@@ -45,6 +45,7 @@ export function DMCharacterSheet(): JSX.Element {
 
   const [character, setCharacter] = useState<Character | null>(null)
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
   const [customDamage, setCustomDamage] = useState<number | string>('')
   const [tempHpInput, setTempHpInput] = useState<number | string>('')
@@ -75,7 +76,10 @@ export function DMCharacterSheet(): JSX.Element {
         }
         setCharacter(migrated)
       })
-      .catch((err) => console.error('Failed to load character:', err))
+      .catch((err) => {
+        console.error('Failed to load character:', err)
+        setLoadError(true)
+      })
       .finally(() => setLoading(false))
 
     // Real-time subscription: sync character changes from other sources (player edits, shop purchases)
@@ -162,6 +166,48 @@ export function DMCharacterSheet(): JSX.Element {
       return updated
     })
   }, [scheduleSave])
+
+  if (loadError && !character) {
+    return (
+      <Box style={{ minHeight: '100vh', background: '#120d06' }}>
+        <NavBar />
+        <Center h="60vh">
+          <Stack align="center" gap="md">
+            <Text style={{ color: '#e85d5d', fontFamily: '"Cinzel", serif' }}>
+              Failed to load character
+            </Text>
+            <Group>
+              <Button variant="outline" color="yellow" onClick={() => {
+                setLoadError(false)
+                setLoading(true)
+                if (characterId) {
+                  api.loadCharacter(characterId)
+                    .then((data) => setCharacter({
+                      ...data,
+                      currentHP: data.currentHP ?? 0,
+                      tempHP: data.tempHP ?? 0,
+                      heroPoints: data.heroPoints ?? 1,
+                      conditions: data.conditions ?? [],
+                      spellSlotsUsed: data.spellSlotsUsed ?? {},
+                      focusPointsUsed: data.focusPointsUsed ?? 0,
+                      goldRemaining: data.goldRemaining ?? 1500,
+                      purchasedEquipment: data.purchasedEquipment ?? []
+                    }))
+                    .catch(() => setLoadError(true))
+                    .finally(() => setLoading(false))
+                }
+              }}>
+                Retry
+              </Button>
+              <Button variant="subtle" color="gray" onClick={() => navigate(`/campaign/${campaignId}`)}>
+                Back to Campaign
+              </Button>
+            </Group>
+          </Stack>
+        </Center>
+      </Box>
+    )
+  }
 
   if (loading || !character) {
     return (

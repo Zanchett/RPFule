@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react'
+import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Container,
@@ -20,6 +20,7 @@ import { useCharacterStore } from '../stores/characterStore'
 import { useCampaignStore } from '../stores/campaignStore'
 import { getAllGameSystems } from '../../game-systems'
 import { NavBar } from '../components/NavBar'
+import { useRefreshOnMount } from '../lib/useRefreshOnMount'
 import * as api from '../lib/api'
 
 const SYSTEM_THUMBNAILS: Record<string, string> = {
@@ -41,10 +42,11 @@ export function HomePage(): JSX.Element {
   const allSystems = getAllGameSystems()
   const [selectedSystem, setSelectedSystem] = useState(gameSystem.id)
 
-  useEffect(() => {
+  // Always re-fetch on mount (navigation back) and tab visibility change
+  useRefreshOnMount(() => {
     loadCharacterList()
     loadCampaigns()
-  }, [loadCharacterList, loadCampaigns])
+  })
 
   // All campaigns where user can assign characters
   const allUserCampaigns = [
