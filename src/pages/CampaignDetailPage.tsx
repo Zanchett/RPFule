@@ -42,9 +42,13 @@ export function CampaignDetailPage(): JSX.Element {
     // Subscribe to real-time campaign changes (members joining/leaving, characters assigned)
     const unsubscribe = subscribeToCampaign(id)
 
-    // Refresh when tab becomes visible again
+    // Refresh when tab becomes visible — but only after 60+ seconds idle
+    let lastLoad = Date.now()
     const handleVisibility = (): void => {
-      if (document.visibilityState === 'visible') loadData()
+      if (document.visibilityState !== 'visible') return
+      if (Date.now() - lastLoad < 60_000) return
+      lastLoad = Date.now()
+      loadData()
     }
     document.addEventListener('visibilitychange', handleVisibility)
 

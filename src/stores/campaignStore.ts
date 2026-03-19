@@ -4,6 +4,19 @@ import { Campaign, CampaignMember, Character } from '../types'
 import * as api from '../lib/api'
 import { withRetry } from '../lib/retry'
 
+// Get user ID with retry — handles race condition where auth hasn't fully initialized yet
+async function getUserId(): Promise<string | null> {
+  const { data: { session } } = await supabase.auth.getSession()
+  if (session?.user?.id) return session.user.id
+  // If no session, try refreshing (handles expired tokens)
+  try {
+    const { data: { session: refreshed } } = await supabase.auth.refreshSession()
+    return refreshed?.user?.id ?? null
+  } catch {
+    return null
+  }
+}
+
 interface CampaignStore {
   campaigns: Campaign[]
   joinedCampaigns: Campaign[]
@@ -37,16 +50,15 @@ export const useCampaignStore = create<CampaignStore>((set, get) => ({
 
   loadCampaigns: async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession()
-      const user = session?.user
-      if (!user) return
+      const userId = await getUserId()
+      if (!userId) return
 
       // Campaigns where user is DM
       const { data: dmCampaigns } = await withRetry(async () => {
         const res = await supabase
           .from('campaigns')
           .select('*')
-          .eq('dm_user_id', user.id)
+          .eq('dm_user_id', userId)
           .order('created_at', { ascending: false })
         if (res.error) throw res.error
         return res
@@ -57,7 +69,7 @@ export const useCampaignStore = create<CampaignStore>((set, get) => ({
         const res = await supabase
           .from('campaign_members')
           .select('campaign_id')
-          .eq('user_id', user.id)
+          .eq('user_id', userId)
         if (res.error) throw res.error
         return res
       })
@@ -88,9 +100,8 @@ export const useCampaignStore = create<CampaignStore>((set, get) => ({
   },
 
   createCampaign: async (name, description, gameSystemId) => {
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session?.user) throw new Error('Not authenticated')
-    const user = session.user
+    const userId = await getUserId()
+    if (!userId) throw new Error('Not authenticated')
 
     const { data, error } = await supabase
       .from('campaigns')
@@ -98,7 +109,7 @@ export const useCampaignStore = create<CampaignStore>((set, get) => ({
         name,
         description,
         game_system_id: gameSystemId,
-        dm_user_id: user.id
+        dm_user_id: userId
       })
       .select()
       .single()
@@ -109,7 +120,12 @@ export const useCampaignStore = create<CampaignStore>((set, get) => ({
   },
 
   loadCampaignDetail: async (id) => {
-    set({ loading: true })
+    // Only show loading spinner on initial load — not on refreshes
+    // This prevents the spinner flash when tab-switching or real-time events fire
+    const isInitialLoad = !get().currentCampaign || get().currentCampaign?.id !== id
+    if (isInitialLoad) {
+      set({ loading: true })
+    }
 
     try {
       // Load campaign first — if this fails, nothing else can proceed
@@ -226,22 +242,21 @@ export const useCampaignStore = create<CampaignStore>((set, get) => ({
   },
 
   leaveCampaign: async (campaignId) => {
-    const { data: { session } } = await supabase.auth.getSession()
-    const user = session?.user
-    if (!user) return
+    const userId = await getUserId()
+    if (!userId) return
 
     await supabase
       .from('campaign_members')
       .delete()
       .eq('campaign_id', campaignId)
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
 
     // Unassign characters from this campaign
     await supabase
       .from('characters')
       .update({ campaign_id: null })
       .eq('campaign_id', campaignId)
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
 
     await get().loadCampaigns()
   },

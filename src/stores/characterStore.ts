@@ -126,8 +126,9 @@ export const useCharacterStore = create<CharacterStore>((set, get) => ({
         updatedAt: c.updatedAt
       }))
       set({ characterList: summaries })
-    } catch {
-      set({ characterList: [] })
+    } catch (err) {
+      console.error('Failed to load character list:', err)
+      // Don't clear existing data on failure — keep stale data rather than showing nothing
     }
   },
 
