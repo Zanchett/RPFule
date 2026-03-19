@@ -4,6 +4,7 @@ import { Character, AbilityId, GameSystem } from '../types'
 import { getGameSystem, getDefaultGameSystem } from '../../game-systems'
 import * as api from '../lib/api'
 import { withRetry } from '../lib/retry'
+import { supabase } from '../lib/supabase'
 
 interface CharacterListItem {
   id: string
@@ -91,6 +92,9 @@ interface CharacterStore {
   longRest: () => void
   setPortrait: (base64: string) => void
   setSessionNotes: (notes: string) => void
+
+  // Real-time: subscribe to DM edits on this character
+  subscribeToCharacter: (characterId: string) => () => void
 }
 
 // Helper: wrap a promise with a timeout
@@ -139,7 +143,7 @@ export const useCharacterStore = create<CharacterStore>((set, get) => ({
     set({ character, isDirty: true, saveStatus: 'saving', saveError: null })
     try {
       // Block until save completes — don't navigate to unsaved character
-      await withRetry(() => withTimeout(api.saveCharacter(character), 10000))
+      await withRetry(() => withTimeout(api.saveCharacter(character), 6000))
       set({ isDirty: false, saveStatus: 'saved', saveError: null })
       setTimeout(() => {
         const { saveStatus } = get()
@@ -204,7 +208,7 @@ export const useCharacterStore = create<CharacterStore>((set, get) => ({
     set({ character: updated, saveStatus: 'saving', saveError: null })
     isSaving = false
     try {
-      await withRetry(() => withTimeout(api.saveCharacter(updated), 10000), { retries: 2 })
+      await withRetry(() => withTimeout(api.saveCharacter(updated), 6000), { retries: 1 })
       isSaving = true
       set({ isDirty: false, saveStatus: 'saved', saveError: null })
       isSaving = false
@@ -629,7 +633,58 @@ export const useCharacterStore = create<CharacterStore>((set, get) => ({
   setSessionNotes: (notes) =>
     set((state) => ({
       character: state.character ? { ...state.character, sessionNotes: notes } : null
-    }))
+    })),
+
+  // Real-time subscription: receive DM edits (HP, gold, conditions, etc.) instantly
+  // via Supabase WebSocket — no polling, no refresh needed
+  subscribeToCharacter: (characterId: string) => {
+    const channel = supabase
+      .channel(`player-char:${characterId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'characters',
+          filter: `id=eq.${characterId}`,
+        },
+        () => {
+          // Only apply remote changes if we're NOT currently saving
+          // (prevents overwriting our own in-flight edits)
+          if (isSaving) return
+          const { character, isDirty } = get()
+          if (!character || character.id !== characterId) return
+          // If the player has unsaved local changes, don't overwrite them
+          if (isDirty) return
+
+          // Fetch the latest from DB and merge live-play fields
+          api.loadCharacter(characterId).then((data) => {
+            const prev = get().character
+            if (!prev || prev.id !== characterId) return
+            isSaving = true // prevent dirty flag from triggering
+            set({
+              character: {
+                ...prev,
+                currentHP: data.currentHP ?? prev.currentHP,
+                tempHP: data.tempHP ?? prev.tempHP,
+                heroPoints: data.heroPoints ?? prev.heroPoints,
+                conditions: data.conditions ?? prev.conditions,
+                goldRemaining: data.goldRemaining ?? prev.goldRemaining,
+                purchasedEquipment: data.purchasedEquipment ?? prev.purchasedEquipment,
+                focusPointsUsed: data.focusPointsUsed ?? prev.focusPointsUsed,
+                spellSlotsUsed: data.spellSlotsUsed ?? prev.spellSlotsUsed,
+              }
+            })
+            isSaving = false
+          }).catch(() => { /* ignore — stale data is better than crashing */ })
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }
 }))
 
 // Guard flag: when true, character changes are from a save operation (updatedAt only)
@@ -657,7 +712,7 @@ function startAutoSave(): void {
         useCharacterStore.setState({ saveStatus: 'saving', saveError: null })
         const updated = { ...character, updatedAt: new Date().toISOString() }
         // Use withRetry so transient network issues don't show "Auto-save failed"
-        await withRetry(() => withTimeout(api.saveCharacter(updated), 10000), { retries: 2 })
+        await withRetry(() => withTimeout(api.saveCharacter(updated), 6000), { retries: 1 })
         useCharacterStore.setState({ isDirty: false, saveStatus: 'saved', saveError: null, character: updated })
         isSaving = false
         setTimeout(() => {
@@ -706,7 +761,7 @@ useCharacterStore.subscribe((state, prevState) => {
         isSaving = false
         useCharacterStore.setState({ saveStatus: 'error', saveError: 'Save timed out — please try again' })
       }
-    }, 15000)
+    }, 10000)
   } else if (state.saveStatus !== 'saving' && prevState.saveStatus === 'saving') {
     // Save finished — clear the watchdog
     if (saveStuckTimer) {

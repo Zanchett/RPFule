@@ -1,4 +1,4 @@
-import { supabase } from './supabase'
+import { supabase, ensureSession } from './supabase'
 import { Character, AbilityId } from '../types'
 import { withRetry } from './retry'
 
@@ -12,31 +12,31 @@ function withTimeout<T>(promise: Promise<T>, ms: number, label = 'Operation'): P
   ])
 }
 
-// Get the current user ID, handling expired sessions gracefully.
-// Has its own timeout to prevent hanging if Supabase auth is slow.
+// Get the current user ID. Fast path: read from local session cache (~0ms).
+// Only hits the network if the token is expired and needs a refresh.
+// Timeout: 5s max to prevent blocking the UI.
 async function getCurrentUserId(): Promise<string> {
   return withTimeout((async () => {
-    // First try the fast path: local session cache
+    // Fast path: local session (no network call)
     const { data: { session } } = await supabase.auth.getSession()
 
     if (session?.user?.id) {
-      // Check if token is still valid (not expired)
-      const expiresAt = session.expires_at // Unix timestamp in seconds
+      const expiresAt = session.expires_at ?? 0
       const now = Math.floor(Date.now() / 1000)
-      if (expiresAt && expiresAt > now + 30) {
-        // Token valid for at least 30 more seconds
+      if (expiresAt > now + 30) {
+        // Token valid — instant return
         return session.user.id
       }
-      // Token expired or about to expire — force a refresh
+
+      // Token expired or nearly expired — refresh it
+      // The visibility change handler usually prevents this, but just in case
       const { data: { session: refreshed } } = await supabase.auth.refreshSession()
       if (refreshed?.user?.id) return refreshed.user.id
     }
 
-    // Fallback: network call to verify
-    const { data: { user }, error } = await supabase.auth.getUser()
-    if (error || !user) throw new Error('Not authenticated')
-    return user.id
-  })(), 8000, 'Auth')
+    // No session at all — user needs to re-login
+    throw new Error('Not authenticated')
+  })(), 5000, 'Auth')
 }
 
 interface CharacterRow {

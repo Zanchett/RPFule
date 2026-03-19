@@ -26,13 +26,20 @@ import { SummaryTab } from '../components/tabs/SummaryTab'
 export function CharacterCreator(): JSX.Element {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { character, loadCharacter, saveCharacter, gameSystem, isDirty, saveStatus, saveError, characterLoading, characterError } = useCharacterStore()
+  const { character, loadCharacter, saveCharacter, gameSystem, isDirty, saveStatus, saveError, characterLoading, characterError, subscribeToCharacter } = useCharacterStore()
 
   useEffect(() => {
     if (id && character?.id !== id) {
       loadCharacter(id)
     }
   }, [id, character?.id, loadCharacter])
+
+  // Real-time subscription: receive DM edits (HP, gold, conditions) instantly via WebSocket
+  useEffect(() => {
+    if (!id) return
+    const unsubscribe = subscribeToCharacter(id)
+    return () => { unsubscribe() }
+  }, [id, subscribeToCharacter])
 
   const handleSave = useCallback(async () => {
     await saveCharacter()
