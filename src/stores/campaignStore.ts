@@ -1,15 +1,13 @@
 import { create } from 'zustand'
-import { supabase, ensureSession, dbg } from '../lib/supabase'
+import { supabase, ensureSession, getCachedUserId, dbg } from '../lib/supabase'
 import { Campaign, CampaignMember, Character } from '../types'
 import * as api from '../lib/api'
 import { withRetry } from '../lib/retry'
 
-// Ensure session is alive, then return user ID.
-// This is the SINGLE gate that prevents expired-token queries.
+// Get user ID from memory cache — no lock contention.
 async function getUserId(): Promise<string | null> {
   await ensureSession()
-  const { data: { session } } = await supabase.auth.getSession()
-  return session?.user?.id ?? null
+  return getCachedUserId()
 }
 
 interface CampaignStore {

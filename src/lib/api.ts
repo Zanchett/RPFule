@@ -1,12 +1,12 @@
-import { supabase, ensureSession } from './supabase'
+import { supabase, ensureSession, getCachedUserId } from './supabase'
 import { Character, AbilityId } from '../types'
 
-// Get the current user ID. Ensures session is valid first (handles expired tokens).
-// Fast path: if session was verified recently, no network call needed (~0ms).
+// Get the current user ID from the in-memory session cache.
+// No browser lock contention — reads from memory.
 async function getCurrentUserId(): Promise<string> {
   await ensureSession()
-  const { data: { session } } = await supabase.auth.getSession()
-  if (session?.user?.id) return session.user.id
+  const userId = getCachedUserId()
+  if (userId) return userId
   throw new Error('Not authenticated')
 }
 
