@@ -710,56 +710,6 @@ useCharacterStore.subscribe((state, prevState) => {
   }
 })
 
-// Auto-save: interval-based, saves every 60 seconds if dirty
-let autoSaveInterval: ReturnType<typeof setInterval> | null = null
-
-function startAutoSave(): void {
-  if (autoSaveInterval) return
-  autoSaveInterval = setInterval(async () => {
-    const { character, isDirty, saveStatus } = useCharacterStore.getState()
-    if (character && isDirty && saveStatus !== 'saving') {
-      dbg('char', 'auto-save: TRIGGERED')
-      try {
-        suppressDirty = true
-        useCharacterStore.setState({ saveStatus: 'saving', saveError: null })
-        const updated = { ...character, updatedAt: new Date().toISOString() }
-        const at0 = Date.now()
-        await withRetry(() => withTimeout(api.saveCharacter(updated), 6000), { retries: 1 })
-        dbg('char', `auto-save: OK (${Date.now() - at0}ms)`)
-        useCharacterStore.setState({ isDirty: false, saveStatus: 'saved', saveError: null, character: updated })
-        suppressDirty = false
-        setTimeout(() => {
-          const { saveStatus: s } = useCharacterStore.getState()
-          if (s === 'saved') useCharacterStore.setState({ saveStatus: 'idle' })
-        }, 3000)
-      } catch (err) {
-        suppressDirty = false
-        dbg('char', 'auto-save: FAILED', err)
-        useCharacterStore.setState({
-          saveStatus: 'error',
-          saveError: err instanceof Error ? err.message : 'Auto-save failed'
-        })
-      }
-    }
-  }, 60000)
-}
-
-function stopAutoSave(): void {
-  if (autoSaveInterval) {
-    clearInterval(autoSaveInterval)
-    autoSaveInterval = null
-  }
-}
-
-// Start/stop auto-save based on whether a character is loaded
-useCharacterStore.subscribe((state, prevState) => {
-  if (state.character && !prevState.character) {
-    startAutoSave()
-  } else if (!state.character && prevState.character) {
-    stopAutoSave()
-  }
-})
-
 // Safety net: if saveStatus gets stuck at 'saving' for >15 seconds, reset it
 // This prevents infinite loading spinners on the save button
 let saveStuckTimer: ReturnType<typeof setTimeout> | null = null
