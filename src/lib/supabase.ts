@@ -7,18 +7,6 @@ if (!supabaseUrl || !supabaseAnonKey) {
   console.warn('Missing Supabase environment variables. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in .env')
 }
 
-export const supabase = createClient(
-  supabaseUrl || 'https://placeholder.supabase.co',
-  supabaseAnonKey || 'placeholder',
-  {
-    auth: {
-      autoRefreshToken: true,
-      persistSession: true,
-      detectSessionInUrl: true,
-    },
-  }
-)
-
 // ── Debug logging (prefix all with [RPF] so you can filter in console) ──
 const DEBUG = true
 function dbg(area: string, msg: string, data?: unknown) {
@@ -32,6 +20,39 @@ function dbg(area: string, msg: string, data?: unknown) {
 }
 
 export { dbg }
+
+// Custom fetch with automatic timeout — kills stale TCP connections
+// that hang after the browser has been idle. Without this, requests
+// can hang forever on a dead connection.
+function fetchWithTimeout(url: RequestInfo | URL, options?: RequestInit): Promise<Response> {
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => {
+    const urlStr = typeof url === 'string' ? url : url.toString()
+    const shortUrl = urlStr.split('?')[0].split('/').slice(-2).join('/')
+    dbg('fetch', `TIMEOUT after 5s — aborting: ${shortUrl}`)
+    controller.abort()
+  }, 5000) // 5 second max per request
+
+  return fetch(url, {
+    ...options,
+    signal: controller.signal,
+  }).finally(() => clearTimeout(timeoutId))
+}
+
+export const supabase = createClient(
+  supabaseUrl || 'https://placeholder.supabase.co',
+  supabaseAnonKey || 'placeholder',
+  {
+    auth: {
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: true,
+    },
+    global: {
+      fetch: fetchWithTimeout,
+    },
+  }
+)
 
 // ────────────────────────────────────────────────────────────────────────────
 // SESSION CACHE
