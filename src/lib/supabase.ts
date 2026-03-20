@@ -157,25 +157,10 @@ async function _doRefresh(): Promise<boolean> {
     const elapsed = Date.now() - t0
 
     if (!result) {
-      dbg('auth', `refresh TIMED OUT (${elapsed}ms) — Web Locks likely orphaned`)
-      // Last resort: try getSession() — the Supabase client may have
-      // auto-refreshed in the background and the local storage might have
-      // a valid session even though refreshSession() is stuck.
-      try {
-        const { data: { session: fallbackSession } } = await Promise.race([
-          supabase.auth.getSession(),
-          new Promise<never>((_, reject) => setTimeout(() => reject(new Error('getSession timeout')), 3000))
-        ])
-        if (fallbackSession) {
-          cachedSession = fallbackSession
-          const ttl = (fallbackSession.expires_at ?? 0) - Math.floor(Date.now() / 1000)
-          dbg('auth', `fallback getSession OK, TTL=${ttl}s`)
-          return ttl > 0
-        }
-      } catch {
-        dbg('auth', 'fallback getSession also failed')
-      }
-      return false
+      dbg('auth', `refresh TIMED OUT (${elapsed}ms) — Web Locks broken, using raw fetch`)
+      // Web Locks are dead. Bypass the Supabase client entirely and call
+      // the auth API directly with a raw fetch() + the refresh token from localStorage.
+      return _rawRefresh()
     }
 
     const { data: { session }, error } = result
@@ -194,6 +179,91 @@ async function _doRefresh(): Promise<boolean> {
     return false
   } catch (err) {
     dbg('auth', 'refresh EXCEPTION', err)
+    return false
+  }
+}
+
+/**
+ * Raw refresh: bypass the Supabase JS client entirely (which uses Web Locks)
+ * and call the Supabase auth REST API directly with a plain fetch().
+ * Reads the refresh_token from localStorage, posts it to /auth/v1/token,
+ * and updates both localStorage and our in-memory cache with the new session.
+ */
+async function _rawRefresh(): Promise<boolean> {
+  try {
+    // Read the stored session from localStorage (Supabase stores it here)
+    const storageKey = `sb-${new URL(supabaseUrl || '').hostname.split('.')[0]}-auth-token`
+    const raw = localStorage.getItem(storageKey)
+    if (!raw) {
+      dbg('auth', 'rawRefresh: no stored session in localStorage')
+      return false
+    }
+
+    let stored: { refresh_token?: string }
+    try {
+      stored = JSON.parse(raw)
+    } catch {
+      dbg('auth', 'rawRefresh: failed to parse stored session')
+      return false
+    }
+
+    const refreshToken = stored.refresh_token
+    if (!refreshToken) {
+      dbg('auth', 'rawRefresh: no refresh_token in stored session')
+      return false
+    }
+
+    dbg('auth', 'rawRefresh: calling /auth/v1/token directly...')
+    const t0 = Date.now()
+
+    // Direct API call — no Web Locks involved
+    const response = await fetch(`${supabaseUrl}/auth/v1/token?grant_type=refresh_token`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': supabaseAnonKey || '',
+      },
+      body: JSON.stringify({ refresh_token: refreshToken }),
+    })
+
+    const elapsed = Date.now() - t0
+
+    if (!response.ok) {
+      dbg('auth', `rawRefresh: API returned ${response.status} (${elapsed}ms)`)
+      return false
+    }
+
+    const data = await response.json()
+    dbg('auth', `rawRefresh: OK (${elapsed}ms), got new tokens`)
+
+    // Update localStorage so the Supabase client picks up the new tokens
+    localStorage.setItem(storageKey, JSON.stringify(data))
+
+    // Update our in-memory cache
+    cachedSession = {
+      access_token: data.access_token,
+      refresh_token: data.refresh_token,
+      expires_in: data.expires_in,
+      expires_at: data.expires_at ?? Math.floor(Date.now() / 1000) + (data.expires_in || 3600),
+      token_type: data.token_type || 'bearer',
+      user: data.user,
+    } as Session
+
+    // Tell the Supabase client about the new session so its internal state updates
+    // This may or may not work depending on lock state, but it's best-effort
+    try {
+      await supabase.auth.setSession({
+        access_token: data.access_token,
+        refresh_token: data.refresh_token,
+      })
+      dbg('auth', 'rawRefresh: supabase.auth.setSession succeeded')
+    } catch {
+      dbg('auth', 'rawRefresh: supabase.auth.setSession failed (locks still broken), but raw cache is updated')
+    }
+
+    return true
+  } catch (err) {
+    dbg('auth', 'rawRefresh: EXCEPTION', err)
     return false
   }
 }

@@ -186,6 +186,7 @@ export const useCharacterStore = create<CharacterStore>((set, get) => ({
       }
 
       dbg('char', `loadCharacter: DONE OK (${Date.now() - t0}ms)`)
+      suppressDirty = true
       set({
         character: migrated,
         gameSystem: system,
@@ -193,6 +194,7 @@ export const useCharacterStore = create<CharacterStore>((set, get) => ({
         characterLoading: false,
         characterError: null
       })
+      suppressDirty = false
     } catch (err) {
       dbg('char', `loadCharacter: FAILED (${Date.now() - t0}ms)`, err)
       set({
@@ -212,22 +214,22 @@ export const useCharacterStore = create<CharacterStore>((set, get) => ({
     }
     dbg('char', 'saveCharacter: START')
     const updated = { ...character, updatedAt: new Date().toISOString() }
-    isSaving = true
+    suppressDirty = true
     set({ character: updated, saveStatus: 'saving', saveError: null })
-    isSaving = false
+    suppressDirty = false
     try {
       const st0 = Date.now()
       await withRetry(() => withTimeout(api.saveCharacter(updated), 6000), { retries: 1 })
       dbg('char', `saveCharacter: OK (${Date.now() - st0}ms)`)
-      isSaving = true
+      suppressDirty = true
       set({ isDirty: false, saveStatus: 'saved', saveError: null })
-      isSaving = false
+      suppressDirty = false
       setTimeout(() => {
         const { saveStatus } = get()
         if (saveStatus === 'saved') set({ saveStatus: 'idle' })
       }, 3000)
     } catch (err) {
-      isSaving = false
+      suppressDirty = false
       const message = err instanceof Error ? err.message : 'Save failed'
       dbg('char', `saveCharacter: FAILED — ${message}`, err)
       set({ saveStatus: 'error', saveError: message })
@@ -660,7 +662,7 @@ export const useCharacterStore = create<CharacterStore>((set, get) => ({
         () => {
           // Only apply remote changes if we're NOT currently saving
           // (prevents overwriting our own in-flight edits)
-          if (isSaving) return
+          if (suppressDirty) return
           const { character, isDirty } = get()
           if (!character || character.id !== characterId) return
           // If the player has unsaved local changes, don't overwrite them
@@ -670,7 +672,7 @@ export const useCharacterStore = create<CharacterStore>((set, get) => ({
           api.loadCharacter(characterId).then((data) => {
             const prev = get().character
             if (!prev || prev.id !== characterId) return
-            isSaving = true // prevent dirty flag from triggering
+            suppressDirty = true // prevent dirty flag from triggering
             set({
               character: {
                 ...prev,
@@ -684,7 +686,7 @@ export const useCharacterStore = create<CharacterStore>((set, get) => ({
                 spellSlotsUsed: data.spellSlotsUsed ?? prev.spellSlotsUsed,
               }
             })
-            isSaving = false
+            suppressDirty = false
           }).catch(() => { /* ignore — stale data is better than crashing */ })
         }
       )
@@ -696,13 +698,13 @@ export const useCharacterStore = create<CharacterStore>((set, get) => ({
   }
 }))
 
-// Guard flag: when true, character changes are from a save operation (updatedAt only)
-// and should NOT re-mark the character as dirty.
-let isSaving = false
+// Guard flag: when true, character state changes are from internal operations
+// (load, save, real-time sync) and should NOT re-mark the character as dirty.
+let suppressDirty = false
 
-// Mark dirty on any character change — but NOT when the change is from a save operation
+// Mark dirty on any character change — but NOT during internal operations
 useCharacterStore.subscribe((state, prevState) => {
-  if (isSaving) return
+  if (suppressDirty) return
   if (state.character && state.character !== prevState.character && !state.isDirty) {
     useCharacterStore.setState({ isDirty: true })
   }
@@ -718,20 +720,20 @@ function startAutoSave(): void {
     if (character && isDirty && saveStatus !== 'saving') {
       dbg('char', 'auto-save: TRIGGERED')
       try {
-        isSaving = true
+        suppressDirty = true
         useCharacterStore.setState({ saveStatus: 'saving', saveError: null })
         const updated = { ...character, updatedAt: new Date().toISOString() }
         const at0 = Date.now()
         await withRetry(() => withTimeout(api.saveCharacter(updated), 6000), { retries: 1 })
         dbg('char', `auto-save: OK (${Date.now() - at0}ms)`)
         useCharacterStore.setState({ isDirty: false, saveStatus: 'saved', saveError: null, character: updated })
-        isSaving = false
+        suppressDirty = false
         setTimeout(() => {
           const { saveStatus: s } = useCharacterStore.getState()
           if (s === 'saved') useCharacterStore.setState({ saveStatus: 'idle' })
         }, 3000)
       } catch (err) {
-        isSaving = false
+        suppressDirty = false
         dbg('char', 'auto-save: FAILED', err)
         useCharacterStore.setState({
           saveStatus: 'error',
@@ -769,7 +771,7 @@ useCharacterStore.subscribe((state, prevState) => {
       const { saveStatus } = useCharacterStore.getState()
       if (saveStatus === 'saving') {
         console.warn('Save stuck for 15 seconds — resetting status')
-        isSaving = false
+        suppressDirty = false
         useCharacterStore.setState({ saveStatus: 'error', saveError: 'Save timed out — please try again' })
       }
     }, 10000)
