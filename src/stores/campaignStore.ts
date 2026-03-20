@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { supabase, ensureSession, getCachedUserId, dbg } from '../lib/supabase'
+import { supabase, ensureSession, getCachedUserId, dbg, queryStarted, queryFinished } from '../lib/supabase'
 import { Campaign, CampaignMember, Character } from '../types'
 import * as api from '../lib/api'
 import { withRetry } from '../lib/retry'
@@ -135,6 +135,7 @@ export const useCampaignStore = create<CampaignStore>((set, get) => ({
 
       // Load campaign first
       dbg('campaign', 'loadCampaignDetail: querying campaign row...')
+      queryStarted()
       const { data: campaign, error: campaignError } = await withRetry(async () => {
         const res = await supabase
           .from('campaigns')
@@ -144,6 +145,7 @@ export const useCampaignStore = create<CampaignStore>((set, get) => ({
         if (res.error) throw res.error
         return res
       })
+      queryFinished()
 
       if (campaignError || !campaign) {
         dbg('campaign', `loadCampaignDetail: CAMPAIGN QUERY FAILED (${Date.now() - t0}ms)`, campaignError)

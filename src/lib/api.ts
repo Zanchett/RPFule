@@ -1,4 +1,4 @@
-import { supabase, ensureSession, getCachedUserId } from './supabase'
+import { supabase, ensureSession, getCachedUserId, queryStarted, queryFinished } from './supabase'
 import { Character, AbilityId } from '../types'
 
 // Get the current user ID from the in-memory session cache.
@@ -125,20 +125,30 @@ function rowToCharacter(row: CharacterRow): Character {
 
 export async function saveCharacter(character: Character): Promise<void> {
   const userId = await getCurrentUserId()
-  const row = characterToRow(character, userId)
-  const { error } = await supabase.from('characters').upsert(row)
-  if (error) throw error
+  queryStarted()
+  try {
+    const row = characterToRow(character, userId)
+    const { error } = await supabase.from('characters').upsert(row)
+    if (error) throw error
+  } finally {
+    queryFinished()
+  }
 }
 
 export async function loadCharacter(id: string): Promise<Character> {
   await ensureSession()
-  const { data, error } = await supabase
-    .from('characters')
-    .select('*')
-    .eq('id', id)
-    .single()
-  if (error) throw error
-  return rowToCharacter(data as CharacterRow)
+  queryStarted()
+  try {
+    const { data, error } = await supabase
+      .from('characters')
+      .select('*')
+      .eq('id', id)
+      .single()
+    if (error) throw error
+    return rowToCharacter(data as CharacterRow)
+  } finally {
+    queryFinished()
+  }
 }
 
 export async function deleteCharacter(id: string): Promise<void> {

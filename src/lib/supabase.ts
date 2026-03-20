@@ -186,8 +186,15 @@ async function _doRefresh(): Promise<boolean> {
 /**
  * Raw refresh: bypass the Supabase JS client entirely (which uses Web Locks)
  * and call the Supabase auth REST API directly with a plain fetch().
- * Reads the refresh_token from localStorage, posts it to /auth/v1/token,
- * and updates both localStorage and our in-memory cache with the new session.
+ *
+ * After getting new tokens, we MUST reload the page because:
+ * - The Supabase client's internal getSession() uses Web Locks for EVERY query
+ * - Once Web Locks are orphaned, they can't be fixed from JavaScript
+ * - supabase.from('table').select() internally calls getSession() → hangs
+ * - A page reload is the ONLY way to clear orphaned Web Locks
+ *
+ * The reload is instant (~1-2s) and the user won't lose data because
+ * the new tokens are saved to localStorage before reloading.
  */
 async function _rawRefresh(): Promise<boolean> {
   try {
@@ -234,33 +241,16 @@ async function _rawRefresh(): Promise<boolean> {
     }
 
     const data = await response.json()
-    dbg('auth', `rawRefresh: OK (${elapsed}ms), got new tokens`)
+    dbg('auth', `rawRefresh: OK (${elapsed}ms), got new tokens — saving and reloading page`)
 
-    // Update localStorage so the Supabase client picks up the new tokens
+    // Save new tokens to localStorage — they'll be picked up after reload
     localStorage.setItem(storageKey, JSON.stringify(data))
 
-    // Update our in-memory cache
-    cachedSession = {
-      access_token: data.access_token,
-      refresh_token: data.refresh_token,
-      expires_in: data.expires_in,
-      expires_at: data.expires_at ?? Math.floor(Date.now() / 1000) + (data.expires_in || 3600),
-      token_type: data.token_type || 'bearer',
-      user: data.user,
-    } as Session
+    // Reload the page to clear orphaned Web Locks
+    // This is the ONLY reliable way to fix broken Web Locks
+    window.location.reload()
 
-    // Tell the Supabase client about the new session so its internal state updates
-    // This may or may not work depending on lock state, but it's best-effort
-    try {
-      await supabase.auth.setSession({
-        access_token: data.access_token,
-        refresh_token: data.refresh_token,
-      })
-      dbg('auth', 'rawRefresh: supabase.auth.setSession succeeded')
-    } catch {
-      dbg('auth', 'rawRefresh: supabase.auth.setSession failed (locks still broken), but raw cache is updated')
-    }
-
+    // Return true to prevent error states while reload happens
     return true
   } catch (err) {
     dbg('auth', 'rawRefresh: EXCEPTION', err)
@@ -274,6 +264,36 @@ async function _rawRefresh(): Promise<boolean> {
  */
 export function getCachedUserId(): string | null {
   return cachedSession?.user?.id ?? null
+}
+
+/**
+ * Watchdog: detect when Supabase queries hang (Web Locks broken even with valid token)
+ * and force a page reload. Call queryStarted() before a critical query and
+ * queryFinished() when it completes. If it doesn't complete within 10 seconds,
+ * reload the page.
+ */
+let activeQueryTimer: ReturnType<typeof setTimeout> | null = null
+let activeQueries = 0
+
+export function queryStarted(): void {
+  activeQueries++
+  if (activeQueries === 1) {
+    // First active query — start the watchdog
+    activeQueryTimer = setTimeout(() => {
+      if (activeQueries > 0) {
+        dbg('watchdog', `${activeQueries} queries hung for 10s — Web Locks likely broken, reloading page`)
+        window.location.reload()
+      }
+    }, 10000)
+  }
+}
+
+export function queryFinished(): void {
+  activeQueries = Math.max(0, activeQueries - 1)
+  if (activeQueries === 0 && activeQueryTimer) {
+    clearTimeout(activeQueryTimer)
+    activeQueryTimer = null
+  }
 }
 
 // Proactively refresh when user returns to tab
