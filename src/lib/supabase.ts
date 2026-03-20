@@ -125,8 +125,39 @@ export function ensureSession(): Promise<boolean> {
 async function _doRefresh(): Promise<boolean> {
   try {
     const t0 = Date.now()
-    const { data: { session }, error } = await supabase.auth.refreshSession()
+
+    // CRITICAL: refreshSession() can hang FOREVER due to orphaned Web Locks.
+    // Race it against a 5-second timeout so we don't block the entire app.
+    const result = await Promise.race([
+      supabase.auth.refreshSession(),
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), 5000))
+    ])
+
     const elapsed = Date.now() - t0
+
+    if (!result) {
+      dbg('auth', `refresh TIMED OUT (${elapsed}ms) — Web Locks likely orphaned`)
+      // Last resort: try getSession() — the Supabase client may have
+      // auto-refreshed in the background and the local storage might have
+      // a valid session even though refreshSession() is stuck.
+      try {
+        const { data: { session: fallbackSession } } = await Promise.race([
+          supabase.auth.getSession(),
+          new Promise<never>((_, reject) => setTimeout(() => reject(new Error('getSession timeout')), 3000))
+        ])
+        if (fallbackSession) {
+          cachedSession = fallbackSession
+          const ttl = (fallbackSession.expires_at ?? 0) - Math.floor(Date.now() / 1000)
+          dbg('auth', `fallback getSession OK, TTL=${ttl}s`)
+          return ttl > 0
+        }
+      } catch {
+        dbg('auth', 'fallback getSession also failed')
+      }
+      return false
+    }
+
+    const { data: { session }, error } = result
 
     if (error) {
       dbg('auth', `refresh FAILED (${elapsed}ms): ${error.message}`)
