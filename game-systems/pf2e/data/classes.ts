@@ -616,7 +616,7 @@ export const classes: GameClass[] = [
     ],
     isSpellcaster: false,
     advancement: {
-      classFeatLevels: [1, 4, 6, 8, 10, 12, 14, 16, 18, 20],
+      classFeatLevels: [1, 1, 4, 6, 8, 10, 12, 14, 16, 18, 20], // Two 1st-level impulse feats from kinetic gate
       skillFeatLevels: [2, 4, 6, 8, 10, 12, 14, 16, 18, 20],
       generalFeatLevels: [3, 7, 11, 15, 19],
       skillIncreaseLevels: [3, 5, 7, 9, 11, 13, 15, 17, 19],

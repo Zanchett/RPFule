@@ -403,8 +403,8 @@ export function FeatsTab(): JSX.Element {
             </Group>
             <Text size="sm" style={{ color: '#5c4a35' }}>
               {maxSkillFeats > 0
-                ? 'Choose skill feats gained from your class advancement.'
-                : 'You do not have any additional skill feat slots from class advancement yet.'}
+                ? 'Skill feats are universal — choose from any you qualify for. The number of slots is determined by your class and level.'
+                : 'You do not have any additional skill feat slots yet. Most classes gain skill feats at even levels.'}
             </Text>
             <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
               {skillFeats.map((feat) => {
