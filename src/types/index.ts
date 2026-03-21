@@ -110,6 +110,13 @@ export interface GameClass {
     cantripsAtLevel1: number
     spellSlotsAtLevel1: number
   }
+  // PF2e advancement table — specifies which levels grant feats/skills
+  advancement?: {
+    classFeatLevels: number[]
+    skillFeatLevels: number[]
+    generalFeatLevels: number[]
+    skillIncreaseLevels: number[]
+  }
 }
 
 export interface ClassFeature {
@@ -138,6 +145,10 @@ export interface Feat {
   // For skill feats
   requiredSkill?: string
   requiredProficiency?: ProficiencyRank
+  // For element-specific feats (Kineticist impulses)
+  requiredElements?: string[]
+  // Rarity (common by default, uncommon/rare for special feats)
+  rarity?: 'common' | 'uncommon' | 'rare' | 'unique'
 }
 
 export interface FeatFilter {
@@ -217,6 +228,11 @@ export interface Character {
     background: AbilityId[]
     class: AbilityId[]
     free: AbilityId[]
+    // Level-up boosts (4 free boosts each, optional for backward compat)
+    level5?: AbilityId[]
+    level10?: AbilityId[]
+    level15?: AbilityId[]
+    level20?: AbilityId[]
   }
   abilityFlaws: {
     ancestry: AbilityId[]
@@ -237,6 +253,9 @@ export interface Character {
   // Equipment
   purchasedEquipment: { itemId: string; quantity: number }[]
   goldRemaining: number
+
+  // Kineticist element selection (empty for non-kineticists)
+  kineticistElements?: string[]
 
   // Details
   alignment: string

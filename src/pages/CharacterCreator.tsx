@@ -28,9 +28,33 @@ export function CharacterCreator(): JSX.Element {
   const navigate = useNavigate()
   const { character, loadCharacter, saveCharacter, gameSystem, isDirty, saveStatus, saveError, characterLoading, characterError, subscribeToCharacter } = useCharacterStore()
 
+  // Warn before losing unsaved changes (browser reload, tab close, forced reload)
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (useCharacterStore.getState().isDirty) {
+        e.preventDefault()
+        e.returnValue = 'You have unsaved changes.'
+      }
+    }
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+  }, [])
+
   useEffect(() => {
     if (id && character?.id !== id) {
-      loadCharacter(id)
+      loadCharacter(id).then(() => {
+        // Recover character stashed by forced reload (Web Locks fix)
+        const stashed = sessionStorage.getItem('rpf-unsaved-character')
+        if (stashed) {
+          try {
+            const parsed = JSON.parse(stashed)
+            if (parsed && parsed.id === id) {
+              useCharacterStore.setState({ character: parsed, isDirty: true })
+            }
+          } catch { /* ignore corrupt stash */ }
+          sessionStorage.removeItem('rpf-unsaved-character')
+        }
+      })
     }
   }, [id, character?.id, loadCharacter])
 

@@ -932,6 +932,7 @@ export const feats: Feat[] = [
     prerequisites: 'Air element',
     description:
       'A shearing blade of wind races from you along a 60-foot line, damaging creatures in its path. The blade then returns along the same line, potentially striking targets a second time on the way back.',
+    requiredElements: ['air'],
   },
   {
     id: 'air-cushion',
@@ -942,6 +943,7 @@ export const feats: Feat[] = [
     prerequisites: 'Air element',
     description:
       'You conjure upward air currents that slow a creature\'s fall. The target falls gently at 60 feet per round, taking no falling damage for the duration. You can target yourself or an ally within 60 feet.',
+    requiredElements: ['air'],
   },
   {
     id: 'four-winds',
@@ -952,6 +954,7 @@ export const feats: Feat[] = [
     prerequisites: 'Air element',
     description:
       'You propel up to four willing creatures with powerful winds mimicking the anemoi wind monarchs. Each target can Fly up to 15 feet, carried on elemental gusts.',
+    requiredElements: ['air'],
   },
   {
     id: 'whisper-on-the-wind',
@@ -962,6 +965,7 @@ export const feats: Feat[] = [
     prerequisites: 'Air element',
     description:
       'A soft wind carries your whispered words far from you to a target within 500 feet that you can see. The wind delivers a short message of 25 words or fewer, and can carry a whispered reply back to you.',
+    requiredElements: ['air'],
   },
   {
     id: 'air-shroud',
@@ -972,6 +976,7 @@ export const feats: Feat[] = [
     prerequisites: 'Air element',
     description:
       'Turbulent winds suffuse your kinetic aura, granting you and allies within concealment against ranged attacks from outside the aura. Creatures in the aura gain a +1 circumstance bonus to AC against ranged attacks.',
+    requiredElements: ['air'],
   },
   {
     id: 'lightning-dash',
@@ -982,6 +987,7 @@ export const feats: Feat[] = [
     prerequisites: 'Air element',
     description:
       'You transform into a bolt of living lightning, dashing forward in a 30-foot line. Each creature in the line takes electricity damage with a basic Reflex save. You reappear at the end of the line.',
+    requiredElements: ['air'],
   },
   {
     id: 'clear-as-air',
@@ -992,6 +998,7 @@ export const feats: Feat[] = [
     prerequisites: 'Air element',
     description:
       'Layers of air diffract light around you, making you appear transparent. You become invisible for 1 round or until you use a hostile action. At 10th level, the duration increases to 1 minute.',
+    requiredElements: ['air'],
   },
   {
     id: 'flinging-updraft',
@@ -1002,6 +1009,7 @@ export const feats: Feat[] = [
     prerequisites: 'Air element',
     description:
       'A speeding wind picks up a creature and deposits it nearby. Target a creature within 30 feet; if willing, it flies up to 40 feet in any direction. An unwilling target must attempt a Fortitude save to avoid being flung.',
+    requiredElements: ['air'],
   },
   {
     id: 'cyclonic-ascent',
@@ -1012,6 +1020,7 @@ export const feats: Feat[] = [
     prerequisites: 'Air element',
     description:
       'Whirling winds form a cyclone that lifts you into the air. You gain a fly Speed equal to your Speed for 1 minute. While flying in this way, you can use a single action to create a gust that pushes creatures below you away.',
+    requiredElements: ['air'],
   },
   {
     id: 'storm-spiral',
@@ -1022,6 +1031,7 @@ export const feats: Feat[] = [
     prerequisites: 'Air element',
     description:
       'Thunderclouds and lightning bolts spiral around you in a tremendous thunderclap. Each creature in a 20-foot emanation takes electricity and sonic damage with a basic Reflex save. Creatures that fail are also deafened for 1 round.',
+    requiredElements: ['air'],
   },
   {
     id: 'ghosts-in-the-storm',
@@ -1032,6 +1042,7 @@ export const feats: Feat[] = [
     prerequisites: 'Air element',
     description:
       'Storm clouds are drawn to you, cloaking you and your allies. You create a 30-foot emanation of swirling clouds that grants concealment to you and allies within. Enemies in the area are dazzled.',
+    requiredElements: ['air'],
   },
   {
     id: 'wiles-on-the-wind',
@@ -1042,6 +1053,7 @@ export const feats: Feat[] = [
     prerequisites: 'Air element',
     description:
       'You set lies and illusions loose upon drifting wind. You create illusory sounds and images carried by air currents within a 60-foot emanation. Creatures must succeed on a Will save or become confused by the shifting illusions.',
+    requiredElements: ['air'],
   },
   {
     id: 'body-of-air',
@@ -1052,6 +1064,7 @@ export const feats: Feat[] = [
     prerequisites: 'Air element',
     description:
       'Your gathered air consumes your physical body, leaving you as living vapor. You become an air elemental for 1 minute, gaining a fly Speed of 60 feet, immunity to precision damage, and resistance to physical damage. You can move through tiny gaps.',
+    requiredElements: ['air'],
   },
   {
     id: 'crowned-in-tempests-fury',
@@ -1062,6 +1075,7 @@ export const feats: Feat[] = [
     prerequisites: 'Air element',
     description:
       'You become one with a devastating thunderstorm, wearing a crown of lightning. For 1 minute, you gain a fly Speed of 80 feet, an aura of lightning that deals electricity damage to nearby enemies each round, and your air impulses deal additional electricity damage.',
+    requiredElements: ['air'],
   },
   {
     id: 'infinite-expanse-of-bluest-heaven',
@@ -1072,6 +1086,7 @@ export const feats: Feat[] = [
     prerequisites: 'Air element',
     description:
       'You create an illusion of a limitless sky that makes all creatures in a 60-foot burst feel a terrifying falling sensation. Each creature must attempt a Will save or become frightened and fall prone, overwhelmed by the illusion of infinite falling.',
+    requiredElements: ['air'],
   },
 
   // ========================
@@ -1086,6 +1101,7 @@ export const feats: Feat[] = [
     prerequisites: 'Earth element',
     description:
       'Stone andite encases your body like protective armor. You gain a +2 item bonus to AC until the start of your next turn. At 5th level, the bonus increases to +3, and at 13th level, to +4.',
+    requiredElements: ['earth'],
   },
   {
     id: 'geologic-attunement',
@@ -1096,6 +1112,7 @@ export const feats: Feat[] = [
     prerequisites: 'Earth element',
     description:
       'You tune your senses to the earth and stone around you, extending your awareness through rippling seismic waves. You gain tremorsense as an imprecise sense out to 30 feet, allowing you to detect creatures touching the ground.',
+    requiredElements: ['earth'],
   },
   {
     id: 'stepping-stones',
@@ -1106,6 +1123,7 @@ export const feats: Feat[] = [
     prerequisites: 'Earth element',
     description:
       'Designated rock discs rise from the ground creating a new elevated path. You create a series of floating stone platforms within 30 feet that persist for 1 minute. Creatures can walk along them as if on solid ground.',
+    requiredElements: ['earth'],
   },
   {
     id: 'tremor',
@@ -1116,6 +1134,7 @@ export const feats: Feat[] = [
     prerequisites: 'Earth element',
     description:
       'You unleash a small localized tremor in a 10-foot burst within 30 feet. Creatures in the area must succeed on a Reflex save or fall prone. The area becomes difficult terrain until the start of your next turn.',
+    requiredElements: ['earth'],
   },
   {
     id: 'calcifying-sand',
@@ -1126,6 +1145,7 @@ export const feats: Feat[] = [
     prerequisites: 'Earth element',
     description:
       'Flesh exposed to your sand becomes coarse and begins to magically petrify. A creature within 60 feet must attempt a Fortitude save. On a failure, it is slowed 1 for 1 round as parts of its body begin to calcify.',
+    requiredElements: ['earth'],
   },
   {
     id: 'igneogenesis',
@@ -1136,6 +1156,7 @@ export const feats: Feat[] = [
     prerequisites: 'Earth element',
     description:
       'You create a permanent stone object from your gate or surrounding earth. You can shape up to 5 cubic feet of stone into a simple object—a wall section, a chair, steps, or similar non-complex forms. The stone is permanent.',
+    requiredElements: ['earth'],
   },
   {
     id: 'sand-snatcher',
@@ -1146,6 +1167,7 @@ export const feats: Feat[] = [
     prerequisites: 'Earth element',
     description:
       'A figure of animated sand with grasping arms arises within 30 feet. The sand snatcher can attempt to Grapple a creature each round using your class DC. It has AC and HP based on your level.',
+    requiredElements: ['earth'],
   },
   {
     id: 'weight-of-stone',
@@ -1156,6 +1178,7 @@ export const feats: Feat[] = [
     prerequisites: 'Earth element',
     description:
       'A packed cloud of heavy boulders descends, beating down everyone in a 15-foot burst within 60 feet. Creatures in the area take bludgeoning damage with a basic Reflex save, and the area becomes difficult terrain.',
+    requiredElements: ['earth'],
   },
   {
     id: 'spike-skin',
@@ -1166,6 +1189,7 @@ export const feats: Feat[] = [
     prerequisites: 'Earth element',
     description:
       'You touch a willing creature to harden its skin with rocky, spiky protrusions. The target gains resistance to physical damage and deals piercing damage to any creature that hits it with an unarmed attack or Grapple.',
+    requiredElements: ['earth'],
   },
   {
     id: 'swim-through-earth',
@@ -1176,6 +1200,7 @@ export const feats: Feat[] = [
     prerequisites: 'Earth element',
     description:
       'The earth parts before you, allowing you to swim through solid stone and dirt. You gain a burrow Speed equal to your Speed for 1 minute. You leave no tunnel behind you unless you choose to.',
+    requiredElements: ['earth'],
   },
   {
     id: 'rattle-the-earth',
@@ -1186,6 +1211,7 @@ export const feats: Feat[] = [
     prerequisites: 'Earth element',
     description:
       'You strike the ground with the deepest rocks\' gravity, causing a devastating earthquake in a 30-foot emanation. Creatures take bludgeoning damage with a Reflex save. Structures in the area take double damage. The area becomes difficult terrain.',
+    requiredElements: ['earth'],
   },
   {
     id: 'rock-rampart',
@@ -1196,6 +1222,7 @@ export const feats: Feat[] = [
     prerequisites: 'Earth element',
     description:
       'You form a wall of rock and earth drawn from the Plane of Earth. The wall is up to 60 feet long, 10 feet high, and 5 feet thick. Each 5-foot section has AC, hardness, and HP based on your level.',
+    requiredElements: ['earth'],
   },
   {
     id: 'assume-earths-mantle',
@@ -1206,6 +1233,7 @@ export const feats: Feat[] = [
     prerequisites: 'Earth element',
     description:
       'Enormous rock pieces cluster around your body, encasing you in an earthen mantle. For 1 minute, you gain resistance to all physical damage, your Strikes deal additional earth damage, and your size increases to Large.',
+    requiredElements: ['earth'],
   },
   {
     id: 'rebirth-in-living-stone',
@@ -1216,6 +1244,7 @@ export const feats: Feat[] = [
     prerequisites: 'Earth element',
     description:
       'Rock overflows from within, transforming you into a being of living stone. For 1 minute, you become an earth elemental with immunity to bleed and precision damage, resistance to physical damage, and a burrow Speed of 40 feet.',
+    requiredElements: ['earth'],
   },
   {
     id: 'the-shattered-mountain-weeps',
@@ -1226,6 +1255,7 @@ export const feats: Feat[] = [
     prerequisites: 'Earth element',
     description:
       'You conjure a massive sphere of rock that explodes, unleashing a cataclysm of stone debris in a 40-foot burst within 120 feet. Creatures take massive bludgeoning damage with a basic Reflex save, and the area becomes difficult terrain.',
+    requiredElements: ['earth'],
   },
 
   // ========================
@@ -1240,6 +1270,7 @@ export const feats: Feat[] = [
     prerequisites: 'Fire element',
     description:
       'A condensed jet of flame shoots behind you, propelling you forward. You Stride up to 40 feet in a straight line. Each creature adjacent to your path takes fire damage with a basic Reflex save.',
+    requiredElements: ['fire'],
   },
   {
     id: 'eternal-torch',
@@ -1250,6 +1281,7 @@ export const feats: Feat[] = [
     prerequisites: 'Fire element',
     description:
       'You open your kinetic gate just enough for the flow of a torch-sized flame. You create a magical torch flame that sheds bright light in a 20-foot radius and dim light for another 20 feet. It lasts until you dismiss it.',
+    requiredElements: ['fire'],
   },
   {
     id: 'flying-flame',
@@ -1260,6 +1292,7 @@ export const feats: Feat[] = [
     prerequisites: 'Fire element',
     description:
       'A tiny flame in your chosen shape takes flight. The flying flame moves up to 40 feet and sheds light. You can command it to move and deal fire damage to creatures it passes through.',
+    requiredElements: ['fire'],
   },
   {
     id: 'scorching-column',
@@ -1270,6 +1303,7 @@ export const feats: Feat[] = [
     prerequisites: 'Fire element',
     description:
       'With an upward gesture, you shape a vertical column of extreme heat in a 5-foot burst within 60 feet. Creatures in the column take fire damage with a basic Reflex save.',
+    requiredElements: ['fire'],
   },
   {
     id: 'blazing-wave',
@@ -1280,6 +1314,7 @@ export const feats: Feat[] = [
     prerequisites: 'Fire element',
     description:
       'Flames flow out from you in a cascading wave, engulfing everything in a 30-foot cone. Creatures in the area take fire damage with a basic Reflex save. Unattended flammable objects in the area catch fire.',
+    requiredElements: ['fire'],
   },
   {
     id: 'thermal-nimbus',
@@ -1290,6 +1325,7 @@ export const feats: Feat[] = [
     prerequisites: 'Fire element',
     description:
       'You direct waves of warmth to drastically shift the surrounding temperature within your kinetic aura. You can choose to make the aura scorching hot (dealing fire damage to enemies who enter or start their turn in it) or comfortably warm (protecting allies from cold environments).',
+    requiredElements: ['fire'],
   },
   {
     id: 'crawling-fire',
@@ -1300,6 +1336,7 @@ export const feats: Feat[] = [
     prerequisites: 'Fire element',
     description:
       'You create a flaming creature with searing claws that mimics a beast\'s motions. The crawling fire occupies a space within 60 feet and can attack creatures, dealing fire damage. It has AC and HP based on your level.',
+    requiredElements: ['fire'],
   },
   {
     id: 'volcanic-escape',
@@ -1310,6 +1347,7 @@ export const feats: Feat[] = [
     prerequisites: 'Fire element',
     description:
       'When an enemy hits you with a melee attack, lava reflexively explodes beneath you and your attacker. You can use this reaction to deal fire damage to the triggering creature and Stride up to half your Speed.',
+    requiredElements: ['fire'],
   },
   {
     id: 'kindle-inner-flames',
@@ -1320,6 +1358,7 @@ export const feats: Feat[] = [
     prerequisites: 'Fire element',
     description:
       'You awaken the latent fire-channeling potential in other creatures. A willing creature within 30 feet gains the ability to add fire damage to its Strikes for 1 minute and gains resistance to fire damage.',
+    requiredElements: ['fire'],
   },
   {
     id: 'solar-detonation',
@@ -1330,6 +1369,7 @@ export const feats: Feat[] = [
     prerequisites: 'Fire element',
     description:
       'Blinding flames explode in a swirling sphere, filling a 20-foot burst within 60 feet. Creatures in the area take fire damage with a basic Reflex save. On a failed save, creatures are also dazzled for 1 round from the blinding light.',
+    requiredElements: ['fire'],
   },
   {
     id: 'architect-of-flame',
@@ -1340,6 +1380,7 @@ export const feats: Feat[] = [
     prerequisites: 'Fire element',
     description:
       'Flames rise and shape into a designed wall or dome at your command. You create a wall of fire up to 60 feet long and 20 feet tall. Creatures that pass through the wall take fire damage. The wall lasts for 1 minute.',
+    requiredElements: ['fire'],
   },
   {
     id: 'furnace-form',
@@ -1350,6 +1391,7 @@ export const feats: Feat[] = [
     prerequisites: 'Fire element',
     description:
       'You open your kinetic gate fully, transforming into a living furnace of flame. For 1 minute, you gain immunity to fire, weakness to cold, a fly Speed of 40 feet, and your melee Strikes deal additional fire damage.',
+    requiredElements: ['fire'],
   },
   {
     id: 'walk-through-the-conflagration',
@@ -1360,6 +1402,7 @@ export const feats: Feat[] = [
     prerequisites: 'Fire element',
     description:
       'You fall through your kinetic gate, leaving behind a flame effigy, and reappear majestically elsewhere. You teleport up to 120 feet to a space you can see. The flame effigy explodes, dealing fire damage in a 10-foot burst.',
+    requiredElements: ['fire'],
   },
   {
     id: 'all-shall-end-in-flames',
@@ -1370,6 +1413,7 @@ export const feats: Feat[] = [
     prerequisites: 'Fire element',
     description:
       'White-hot fire consumes everything in a cataclysmic sphere. You create a 40-foot burst of devastating fire within 500 feet that deals massive fire damage with a basic Reflex save. The area continues burning for 1 minute.',
+    requiredElements: ['fire'],
   },
   {
     id: 'ignite-the-sun',
@@ -1380,6 +1424,7 @@ export const feats: Feat[] = [
     prerequisites: 'Fire element',
     description:
       'The primordial creation fires become yours to control. You conjure a miniature sun within 120 feet that sheds bright light in a 60-foot radius and deals fire damage each round to creatures within 20 feet. It lasts for 1 minute.',
+    requiredElements: ['fire'],
   },
 
   // ========================
@@ -1394,6 +1439,7 @@ export const feats: Feat[] = [
     prerequisites: 'Metal element',
     description:
       'An artificial metal object forms in your hands or within 30 feet. You create a simple metal object of up to 1 Bulk—a tool, weapon, or piece of equipment. The object lasts for 10 minutes or until you dismiss it.',
+    requiredElements: ['metal'],
   },
   {
     id: 'magnetic-pinions',
@@ -1404,6 +1450,7 @@ export const feats: Feat[] = [
     prerequisites: 'Metal element',
     description:
       'Metal pieces fly from you propelled by magnetism at great velocity. Make a ranged impulse attack against a creature within 60 feet, dealing piercing damage. The metal pinions deal additional persistent bleed damage on a critical hit.',
+    requiredElements: ['metal'],
   },
   {
     id: 'metal-carapace',
@@ -1414,6 +1461,7 @@ export const feats: Feat[] = [
     prerequisites: 'Metal element',
     description:
       'Bent and rusted metal sheets cover your body in an armored shell. You gain a +2 item bonus to AC until the start of your next turn. This increases to +3 at 5th level and +4 at 13th level.',
+    requiredElements: ['metal'],
   },
   {
     id: 'shard-strike',
@@ -1424,6 +1472,7 @@ export const feats: Feat[] = [
     prerequisites: 'Metal element',
     description:
       'Jagged metal shards form in the air and lash out from you in a 15-foot cone. Creatures in the area take slashing damage with a basic Reflex save. The shards deal persistent bleed damage on a critical failure.',
+    requiredElements: ['metal'],
   },
   {
     id: 'magnetic-field',
@@ -1434,6 +1483,7 @@ export const feats: Feat[] = [
     prerequisites: 'Metal element',
     description:
       'A magnetic field surrounds you, repelling and attracting metal objects. Metal weapons used to attack you take a -1 circumstance penalty, and you can use a reaction to pull an unattended metal object to your hand from within 30 feet.',
+    requiredElements: ['metal'],
   },
   {
     id: 'plate-in-treasure',
@@ -1444,6 +1494,7 @@ export const feats: Feat[] = [
     prerequisites: 'Metal element',
     description:
       'Precious metal flows from your fingers to plate an object in gold, silver, or another valuable metal. The plating is permanent and increases the item\'s value. You can also use this to coat an object for mechanical benefit.',
+    requiredElements: ['metal'],
   },
   {
     id: 'consume-power',
@@ -1454,6 +1505,7 @@ export const feats: Feat[] = [
     prerequisites: 'Metal element',
     description:
       'You absorb energy directed at you, holding it in your kinetic gate. When you are targeted by an electricity or metal-based effect and succeed on your save, you can absorb some of the energy and add bonus damage to your next Elemental Blast.',
+    requiredElements: ['metal'],
   },
   {
     id: 'scrap-barricade',
@@ -1464,6 +1516,7 @@ export const feats: Feat[] = [
     prerequisites: 'Metal element',
     description:
       'Ragged metal pieces weld themselves together into a ramshackle barricade. You create a metal wall up to 30 feet long and 10 feet high. It provides cover and has hardness and HP based on your level.',
+    requiredElements: ['metal'],
   },
   {
     id: 'conductive-sphere',
@@ -1474,6 +1527,7 @@ export const feats: Feat[] = [
     prerequisites: 'Metal element',
     description:
       'A floating metal ball crackling with electricity forms within 60 feet. Each round, the sphere can discharge a bolt of lightning at a creature within 30 feet, dealing electricity damage. It lasts for 1 minute.',
+    requiredElements: ['metal'],
   },
   {
     id: 'retch-rust',
@@ -1484,6 +1538,7 @@ export const feats: Feat[] = [
     prerequisites: 'Metal element',
     description:
       'You exhale a cloud of rust-colored metal flake tendrils in a 30-foot cone. Creatures in the area take damage with a basic Fortitude save. Metal armor and weapons in the area take persistent rust damage.',
+    requiredElements: ['metal'],
   },
   {
     id: 'rain-of-razors',
@@ -1494,6 +1549,7 @@ export const feats: Feat[] = [
     prerequisites: 'Metal element',
     description:
       'Razor-sharp metal slivers fall from the sky in a 20-foot burst within 120 feet. Creatures take slashing damage with a basic Reflex save, and the area becomes hazardous terrain dealing slashing damage to creatures that move through it.',
+    requiredElements: ['metal'],
   },
   {
     id: 'shattershields',
@@ -1504,6 +1560,7 @@ export const feats: Feat[] = [
     prerequisites: 'Metal element',
     description:
       'Four floating metal plates orbit you, intercepting attacks directed at you and your allies. The shields provide a +2 circumstance bonus to AC to you and allies within your kinetic aura. Each shield can absorb a hit before shattering.',
+    requiredElements: ['metal'],
   },
   {
     id: 'alloy-flesh-and-steel',
@@ -1514,6 +1571,7 @@ export const feats: Feat[] = [
     prerequisites: 'Metal element',
     description:
       'Elemental energy replaces your body\'s cells with raw metal. For 1 minute, you gain resistance to all physical damage, your Strikes deal additional slashing damage, and you gain immunity to bleed and persistent bleed damage.',
+    requiredElements: ['metal'],
   },
   {
     id: 'beasts-of-slumbering-steel',
@@ -1524,6 +1582,7 @@ export const feats: Feat[] = [
     prerequisites: 'Metal element',
     description:
       'You conjure metal elemental mounts from interlocking metal pieces. Up to 4 willing creatures within 30 feet each gain a metallic steed for 10 minutes that has a Speed of 60 feet and can fly at 40 feet.',
+    requiredElements: ['metal'],
   },
   {
     id: 'hell-of-million-needles',
@@ -1534,6 +1593,7 @@ export const feats: Feat[] = [
     prerequisites: 'Metal element',
     description:
       'The landscape fills with monumental metal filaments in a 40-foot burst within 120 feet. Creatures take massive piercing damage with a basic Reflex save. The area becomes impassable hazardous terrain for 1 minute.',
+    requiredElements: ['metal'],
   },
 
   // ========================
@@ -1548,6 +1608,7 @@ export const feats: Feat[] = [
     prerequisites: 'Water element',
     description:
       'A cascade of water blunts or disperses an incoming attack. When you or an ally within 30 feet is hit by an attack, you can use your reaction to reduce the damage by an amount equal to your level plus your Constitution modifier.',
+    requiredElements: ['water'],
   },
   {
     id: 'oceans-balm',
@@ -1558,6 +1619,7 @@ export const feats: Feat[] = [
     prerequisites: 'Water element',
     description:
       'The sea\'s blessing salves wounds and douses flames. A creature within 30 feet regains Hit Points equal to 1d8 plus your Constitution modifier. If the target is on fire, the healing water also douses the flames.',
+    requiredElements: ['water'],
   },
   {
     id: 'tidal-hands',
@@ -1568,6 +1630,7 @@ export const feats: Feat[] = [
     prerequisites: 'Water element',
     description:
       'Waves rush out from you shaped like emphatic gesture hands in a 15-foot cone. Creatures in the area take bludgeoning damage with a basic Reflex save and are pushed 5 feet away from you on a failed save.',
+    requiredElements: ['water'],
   },
   {
     id: 'winters-clutch',
@@ -1578,6 +1641,7 @@ export const feats: Feat[] = [
     prerequisites: 'Water element',
     description:
       'Gleaming, chilling snow falls in a 10-foot burst within 60 feet. Creatures in the area take cold damage with a basic Reflex save. The area becomes difficult terrain from ice until the start of your next turn.',
+    requiredElements: ['water'],
   },
   {
     id: 'return-to-the-sea',
@@ -1588,6 +1652,7 @@ export const feats: Feat[] = [
     prerequisites: 'Water element',
     description:
       'You adapt a creature for living and moving in water. A willing creature within 30 feet gains a swim Speed equal to its land Speed and the ability to breathe water for 10 minutes.',
+    requiredElements: ['water'],
   },
   {
     id: 'winter-sleet',
@@ -1598,6 +1663,7 @@ export const feats: Feat[] = [
     prerequisites: 'Water element',
     description:
       'Bone-chilling, swirling sleet surrounds you in a 10-foot emanation. Creatures that enter or start their turn in the area take cold damage and the area is difficult terrain. The sleet lasts for 1 minute.',
+    requiredElements: ['water'],
   },
   {
     id: 'driving-rain',
@@ -1608,6 +1674,7 @@ export const feats: Feat[] = [
     prerequisites: 'Water element',
     description:
       'Heavy raindrops batter down like sling stones in a 30-foot cone, dealing bludgeoning damage with a basic Reflex save. The rain also impairs vision, making creatures in the area concealed.',
+    requiredElements: ['water'],
   },
   {
     id: 'torrent-in-the-blood',
@@ -1618,6 +1685,7 @@ export const feats: Feat[] = [
     prerequisites: 'Water element',
     description:
       'A healing wave splashes across a 30-foot cone, cleansing afflictions. Each ally in the area regains Hit Points and can attempt a new save against one poison or disease affecting them with a +2 circumstance bonus.',
+    requiredElements: ['water'],
   },
   {
     id: 'call-the-hurricane',
@@ -1628,6 +1696,7 @@ export const feats: Feat[] = [
     prerequisites: 'Water element',
     description:
       'Massive waves spiral around you as you become the hurricane\'s eye. For 1 minute, you create a 20-foot emanation of churning water and wind. Enemies that enter or start their turn in the area take bludgeoning damage and are pushed 10 feet.',
+    requiredElements: ['water'],
   },
   {
     id: 'impenetrable-fog',
@@ -1638,6 +1707,7 @@ export const feats: Feat[] = [
     prerequisites: 'Water element',
     description:
       'Dense fog condenses in a chaotic swirling pattern within a 20-foot burst. The area becomes heavily obscured. Creatures in the fog are hidden from creatures outside it, and the fog pushes back against attempts to disperse it.',
+    requiredElements: ['water'],
   },
   {
     id: 'glacial-prison',
@@ -1648,6 +1718,7 @@ export const feats: Feat[] = [
     prerequisites: 'Water element',
     description:
       'Intense cold swirls around a foe within 60 feet, covering them with frost and ice. The target must attempt a Fortitude save. On a failure, it is immobilized in ice. On a critical failure, it is petrified in ice for 1 minute.',
+    requiredElements: ['water'],
   },
   {
     id: 'sea-glass-guardians',
@@ -1658,6 +1729,7 @@ export const feats: Feat[] = [
     prerequisites: 'Water element',
     description:
       'Beautiful water elementals race around you, protecting and healing your allies. You summon two sea glass guardians that orbit within your kinetic aura for 1 minute. Each round, they can heal an ally or attack an enemy.',
+    requiredElements: ['water'],
   },
   {
     id: 'barrier-of-boreal-frost',
@@ -1668,6 +1740,7 @@ export const feats: Feat[] = [
     prerequisites: 'Water element',
     description:
       'You form intricate ice structures like walls of frozen bricks. Create a wall of ice up to 60 feet long and 20 feet high. Creatures that pass through take cold damage. The wall has hardness and HP, and lasts for 1 minute.',
+    requiredElements: ['water'],
   },
   {
     id: 'ride-the-tsunami',
@@ -1678,6 +1751,7 @@ export const feats: Feat[] = [
     prerequisites: 'Water element',
     description:
       'Booming, crashing, harbor-filling walls of water overwhelm everything ahead. A massive wave crashes through a 60-foot cone, dealing massive bludgeoning damage with a basic Reflex save. Creatures that fail are pushed 30 feet and knocked prone.',
+    requiredElements: ['water'],
   },
   {
     id: 'usurp-the-lunar-reins',
@@ -1688,6 +1762,7 @@ export const feats: Feat[] = [
     prerequisites: 'Water element',
     description:
       'You grasp the moon\'s connection to the tides, bending water across the battlefield. You control all water within 120 feet, moving it and shaping it at will. Each creature in contact with the water can be moved up to 30 feet in any direction.',
+    requiredElements: ['water'],
   },
 
   // ========================
@@ -1702,6 +1777,7 @@ export const feats: Feat[] = [
     prerequisites: 'Wood element',
     description:
       'You grow a nourishing nut, vegetable, seed, or fruit from the Plane of Wood. A creature that eats it regains 1d4+1 Hit Points. The produce spoils after 1 minute if not consumed. The healing increases as you level up.',
+    requiredElements: ['wood'],
   },
   {
     id: 'hail-of-splinters',
@@ -1712,6 +1788,7 @@ export const feats: Feat[] = [
     prerequisites: 'Wood element',
     description:
       'A fusillade of jagged splinters fires from you in a 30-foot line. Creatures in the line take piercing damage with a basic Reflex save.',
+    requiredElements: ['wood'],
   },
   {
     id: 'hardwood-armor',
@@ -1722,6 +1799,7 @@ export const feats: Feat[] = [
     prerequisites: 'Wood element',
     description:
       'Wood and bark grow over your body like a suit of armor. You gain a +2 item bonus to AC until the start of your next turn. This increases to +3 at 5th level and +4 at 13th level.',
+    requiredElements: ['wood'],
   },
   {
     id: 'timber-sentinel',
@@ -1732,6 +1810,7 @@ export const feats: Feat[] = [
     prerequisites: 'Wood element',
     description:
       'A slim, symmetrical tree travels from the Plane of Wood to take root in an unoccupied space within 30 feet. The timber sentinel provides cover, can be climbed, and lasts for 1 minute or until destroyed.',
+    requiredElements: ['wood'],
   },
   {
     id: 'ravel-of-thorns',
@@ -1742,6 +1821,7 @@ export const feats: Feat[] = [
     prerequisites: 'Wood element',
     description:
       'Thorny vines grow in geometric patterns on surfaces within your kinetic aura. The area becomes difficult terrain, and creatures that move through it take piercing damage from the thorns.',
+    requiredElements: ['wood'],
   },
   {
     id: 'tumbling-lumber',
@@ -1752,6 +1832,7 @@ export const feats: Feat[] = [
     prerequisites: 'Wood element',
     description:
       'Heavy logs eject from the Plane of Wood, slamming into enemies in a 30-foot line. Creatures in the line take bludgeoning damage with a basic Reflex save. On a critical failure, they are knocked prone.',
+    requiredElements: ['wood'],
   },
   {
     id: 'dash-of-herbs',
@@ -1762,6 +1843,7 @@ export const feats: Feat[] = [
     prerequisites: 'Wood element',
     description:
       'A small cloud of medicinal herbs appears and heals a creature within 30 feet. The target regains Hit Points and gains a +1 circumstance bonus to Fortitude saves against poison and disease for 1 round.',
+    requiredElements: ['wood'],
   },
   {
     id: 'wooden-palisade',
@@ -1772,6 +1854,7 @@ export const feats: Feat[] = [
     prerequisites: 'Wood element',
     description:
       'Carved wood planks spring forth from the ground, forming a wall up to 30 feet long and 10 feet high. The wall provides cover and has hardness and HP based on your level.',
+    requiredElements: ['wood'],
   },
   {
     id: 'drifting-pollen',
@@ -1782,6 +1865,7 @@ export const feats: Feat[] = [
     prerequisites: 'Wood element',
     description:
       'A haze of pollen drifts through your kinetic aura. Enemies that enter or start their turn in the area must succeed on a Fortitude save or become sickened 1 from the overwhelming pollen. The haze lasts for 1 minute.',
+    requiredElements: ['wood'],
   },
   {
     id: 'sanguivolent-roots',
@@ -1792,6 +1876,7 @@ export const feats: Feat[] = [
     prerequisites: 'Wood element',
     description:
       'Blood-drinking vines grow from the ground in a 15-foot burst within 60 feet. Creatures in the area take piercing damage as the vines drain their vitality. You and allies within 30 feet regain Hit Points equal to half the damage dealt.',
+    requiredElements: ['wood'],
   },
   {
     id: 'hedge-maze',
@@ -1802,6 +1887,7 @@ export const feats: Feat[] = [
     prerequisites: 'Wood element',
     description:
       'You sculpt a manicured hedge maze in a 30-foot burst within 60 feet. The hedges create difficult terrain and walls of vegetation that block line of sight. Creatures inside must navigate the maze to escape.',
+    requiredElements: ['wood'],
   },
   {
     id: 'witchwood-seed',
@@ -1812,6 +1898,7 @@ export const feats: Feat[] = [
     prerequisites: 'Wood element',
     description:
       'You touch a creature to implant a malignant witchwood seed in its body. The target takes persistent piercing damage as the seed grows roots inside it. Removing the seed requires a Medicine check against your class DC.',
+    requiredElements: ['wood'],
   },
   {
     id: 'orchards-endurance',
@@ -1822,6 +1909,7 @@ export const feats: Feat[] = [
     prerequisites: 'Wood element',
     description:
       'Bark patches appear on you and nearby allies\' skin. You and all allies within your kinetic aura gain resistance to physical damage and fast healing for 1 minute. The bark also grants a +1 circumstance bonus to Fortitude saves.',
+    requiredElements: ['wood'],
   },
   {
     id: 'rouse-the-forests-fury',
@@ -1832,6 +1920,7 @@ export const feats: Feat[] = [
     prerequisites: 'Wood element',
     description:
       'Terrifying animated trees burst from the ground to attack your enemies. You conjure four Large tree creatures in unoccupied spaces within 60 feet. Each tree can Strike creatures, dealing bludgeoning damage, and has AC and HP based on your level.',
+    requiredElements: ['wood'],
   },
   {
     id: 'turn-the-wheel-of-seasons',
@@ -1842,6 +1931,7 @@ export const feats: Feat[] = [
     prerequisites: 'Wood element',
     description:
       'Seasons shift rapidly in a 40-foot burst within 120 feet. Spring heals allies, summer burns enemies with fire, autumn weakens foes with decay, and winter freezes them. Each creature is affected by all four seasons in sequence, taking damage and gaining conditions.',
+    requiredElements: ['wood'],
   },
 
   // ========================

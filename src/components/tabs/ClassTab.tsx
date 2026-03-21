@@ -39,7 +39,7 @@ function profBadge(rank: ProficiencyRank): JSX.Element {
 }
 
 export function ClassTab(): JSX.Element {
-  const { character, gameSystem, setClass, setClassBoost } = useCharacterStore()
+  const { character, gameSystem, setClass, setClassBoost, setKineticistElements } = useCharacterStore()
 
   if (!character) return <></>
 
@@ -303,6 +303,88 @@ export function ClassTab(): JSX.Element {
                       </Stack>
                     </Box>
                   )}
+
+                  {/* Kineticist Element Picker */}
+                  {cls.id === 'kineticist' && (() => {
+                    const elements = [
+                      { id: 'air', name: 'Air' },
+                      { id: 'earth', name: 'Earth' },
+                      { id: 'fire', name: 'Fire' },
+                      { id: 'metal', name: 'Metal' },
+                      { id: 'water', name: 'Water' },
+                      { id: 'wood', name: 'Wood' },
+                    ]
+                    const selected = character.kineticistElements ?? []
+                    const maxElements = [1, 5, 9, 13, 17].filter(l => l <= character.level).length + 1
+
+                    const toggleElement = (elId: string) => {
+                      if (selected.includes(elId)) {
+                        setKineticistElements(selected.filter(e => e !== elId))
+                      } else if (selected.length < maxElements) {
+                        setKineticistElements([...selected, elId])
+                      }
+                    }
+
+                    return (
+                      <Box mt="md" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+                        <Group justify="space-between" mb={4}>
+                          <Text fw={600} size="sm" style={{ color: '#e8d5a3' }}>
+                            Kinetic Elements
+                          </Text>
+                          <Badge
+                            size="sm"
+                            style={{
+                              background: 'rgba(154, 123, 47, 0.15)',
+                              color: '#d4a843',
+                              border: '1px solid rgba(154, 123, 47, 0.3)',
+                            }}
+                          >
+                            {selected.length}/{maxElements} elements
+                          </Badge>
+                        </Group>
+                        <Text size="xs" style={{ color: '#8b7355' }} mb="xs">
+                          Choose your kinetic elements. You gain additional elements as you level up.
+                        </Text>
+                        <SimpleGrid cols={{ base: 2, sm: 3 }} spacing="xs">
+                          {elements.map(el => {
+                            const isElSelected = selected.includes(el.id)
+                            return (
+                              <Box
+                                key={el.id}
+                                onClick={() => toggleElement(el.id)}
+                                style={{
+                                  padding: '8px 12px',
+                                  borderRadius: 4,
+                                  cursor: isElSelected || selected.length < maxElements ? 'pointer' : 'not-allowed',
+                                  background: isElSelected
+                                    ? 'rgba(154, 123, 47, 0.25)'
+                                    : 'rgba(92, 74, 53, 0.2)',
+                                  border: isElSelected
+                                    ? '1px solid rgba(212, 168, 67, 0.5)'
+                                    : '1px solid rgba(92, 74, 53, 0.3)',
+                                  opacity: !isElSelected && selected.length >= maxElements ? 0.5 : 1,
+                                  transition: 'all 0.15s ease',
+                                }}
+                              >
+                                <Group gap="xs">
+                                  <Text style={{ color: '#d4a843', fontSize: 12 }}>
+                                    {isElSelected ? '✦' : '◇'}
+                                  </Text>
+                                  <Text
+                                    fw={isElSelected ? 600 : 400}
+                                    size="sm"
+                                    style={{ color: isElSelected ? '#e8d5a3' : '#8b7355' }}
+                                  >
+                                    {el.name}
+                                  </Text>
+                                </Group>
+                              </Box>
+                            )
+                          })}
+                        </SimpleGrid>
+                      </Box>
+                    )
+                  })()}
                 </Box>
               )}
             </Box>

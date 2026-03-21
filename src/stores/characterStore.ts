@@ -76,6 +76,12 @@ interface CharacterStore {
   // Campaign
   setCampaignId: (campaignId: string | null) => void
 
+  // Level-up ability boosts
+  setLevelBoosts: (level: 5 | 10 | 15 | 20, boosts: AbilityId[]) => void
+
+  // Kineticist elements
+  setKineticistElements: (elements: string[]) => void
+
   // Live play actions
   setCurrentHP: (hp: number) => void
   adjustHP: (delta: number) => void
@@ -292,7 +298,8 @@ export const useCharacterStore = create<CharacterStore>((set, get) => ({
         classId,
         abilityBoosts: { ...state.character.abilityBoosts, class: [] },
         skillTraining: [],
-        selectedFeats: { ...state.character.selectedFeats, classFeats: [] }
+        selectedFeats: { ...state.character.selectedFeats, classFeats: [] },
+        kineticistElements: [], // Reset elements when class changes
       }
       // Recalculate HP when class changes
       const newMaxHP = state.gameSystem.calculateHP(updated)
@@ -347,6 +354,26 @@ export const useCharacterStore = create<CharacterStore>((set, get) => ({
             ...state.character,
             abilityBoosts: { ...state.character.abilityBoosts, free: boosts }
           }
+        : null
+    })),
+
+  setLevelBoosts: (level, boosts) =>
+    set((state) => ({
+      character: state.character
+        ? {
+            ...state.character,
+            abilityBoosts: {
+              ...state.character.abilityBoosts,
+              [`level${level}`]: boosts
+            }
+          }
+        : null
+    })),
+
+  setKineticistElements: (elements) =>
+    set((state) => ({
+      character: state.character
+        ? { ...state.character, kineticistElements: elements }
         : null
     })),
 
@@ -697,6 +724,13 @@ export const useCharacterStore = create<CharacterStore>((set, get) => ({
     }
   }
 }))
+
+// Register store on window so supabase.ts can stash dirty character before forced reloads
+// (avoids circular imports between characterStore and supabase)
+if (typeof window !== 'undefined') {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (window as any).__rpfCharacterStore = useCharacterStore
+}
 
 // Guard flag: when true, character state changes are from internal operations
 // (load, save, real-time sync) and should NOT re-mark the character as dirty.

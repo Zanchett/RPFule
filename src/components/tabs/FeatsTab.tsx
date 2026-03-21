@@ -1,6 +1,7 @@
 import { Box, Title, Text, Stack, SimpleGrid, Badge, Group, Alert } from '@mantine/core'
 import { useCharacterStore } from '../../stores/characterStore'
 import { Feat } from '../../types'
+import { getAdvancement, countSlotsAtLevel, ANCESTRY_FEAT_LEVELS } from '../../../game-systems/pf2e/rules'
 
 function FeatCard({
   feat,
@@ -52,6 +53,11 @@ function FeatCard({
             Requires: {feat.prerequisites}
           </Text>
         )}
+        {feat.rarity && feat.rarity !== 'common' && (
+          <Badge size="xs" variant="outline" color="yellow" mt={2}>
+            {feat.rarity}
+          </Badge>
+        )}
       </Stack>
     </Box>
   )
@@ -69,6 +75,16 @@ export function FeatsTab(): JSX.Element {
 
   if (!character) return <></>
 
+  // Get class and compute dynamic feat slot counts from advancement table
+  const cls = gameSystem.getClasses().find((c) => c.id === character.classId)
+  const adv = getAdvancement(cls)
+
+  const maxAncestryFeats = countSlotsAtLevel(ANCESTRY_FEAT_LEVELS, character.level)
+  const maxClassFeats = countSlotsAtLevel(adv.classFeatLevels, character.level)
+  const maxGeneralFeats = countSlotsAtLevel(adv.generalFeatLevels, character.level)
+  const maxSkillFeats = countSlotsAtLevel(adv.skillFeatLevels, character.level)
+    + (character.backgroundId ? 1 : 0) // background grants 1 skill feat
+
   // Get feats filtered by character's selections
   const ancestryFeats = gameSystem.getFeats({
     type: 'ancestry',
@@ -79,8 +95,18 @@ export function FeatsTab(): JSX.Element {
   const classFeats = gameSystem.getFeats({
     type: 'class',
     classId: character.classId ?? undefined,
-    maxLevel: character.level + 1 // Class feats can be up to level 2 at character creation
+    maxLevel: character.level
   }).filter((f) => f.classId === character.classId)
+    .filter((f) => {
+      // For Kineticist: filter element-specific feats by selected elements
+      if (f.requiredElements && f.requiredElements.length > 0) {
+        const charElements = character.kineticistElements ?? []
+        // Always show already-selected feats even if element filter would hide them
+        if (character.selectedFeats.classFeats.includes(f.id)) return true
+        return f.requiredElements.some(el => charElements.includes(el))
+      }
+      return true
+    })
 
   const generalFeats = gameSystem.getFeats({
     type: 'general',
@@ -92,15 +118,14 @@ export function FeatsTab(): JSX.Element {
     maxLevel: character.level
   })
 
-  const cls = gameSystem.getClasses().find((c) => c.id === character.classId)
-  const hasClassFeatSlot = cls?.id === 'fighter' || cls?.id === 'rogue' // Fighter and Rogue get class feats at level 1
+  const hasClassFeatSlot = maxClassFeats > 0
 
   const toggleAncestryFeat = (featId: string): void => {
     const current = character.selectedFeats.ancestryFeats
     if (current.includes(featId)) {
       setAncestryFeats(current.filter((f) => f !== featId))
-    } else if (current.length < 1) {
-      setAncestryFeats([featId])
+    } else if (current.length < maxAncestryFeats) {
+      setAncestryFeats([...current, featId])
     }
   }
 
@@ -108,8 +133,8 @@ export function FeatsTab(): JSX.Element {
     const current = character.selectedFeats.classFeats
     if (current.includes(featId)) {
       setClassFeats(current.filter((f) => f !== featId))
-    } else if (current.length < 1) {
-      setClassFeats([featId])
+    } else if (current.length < maxClassFeats) {
+      setClassFeats([...current, featId])
     }
   }
 
@@ -117,8 +142,8 @@ export function FeatsTab(): JSX.Element {
     const current = character.selectedFeats.generalFeats
     if (current.includes(featId)) {
       setGeneralFeats(current.filter((f) => f !== featId))
-    } else if (current.length < 1) {
-      setGeneralFeats([featId])
+    } else if (current.length < maxGeneralFeats) {
+      setGeneralFeats([...current, featId])
     }
   }
 
@@ -126,8 +151,8 @@ export function FeatsTab(): JSX.Element {
     const current = character.selectedFeats.skillFeats
     if (current.includes(featId)) {
       setSkillFeats(current.filter((f) => f !== featId))
-    } else if (current.length < 1) {
-      setSkillFeats([featId])
+    } else if (current.length < maxSkillFeats) {
+      setSkillFeats([...current, featId])
     }
   }
 
@@ -146,8 +171,7 @@ export function FeatsTab(): JSX.Element {
         Feats
       </Title>
       <Text style={{ color: '#8b7355', fontFamily: '"Crimson Text", serif' }}>
-        Choose feats to customize your character. At level 1, you get an ancestry feat and possibly
-        a class feat (depending on your class).
+        Choose feats to customize your character. Available feat slots are determined by your class and level.
       </Text>
 
       {/* Ancestry Feats */}
@@ -158,13 +182,13 @@ export function FeatsTab(): JSX.Element {
               order={4}
               style={{ fontFamily: '"Cinzel", serif', color: '#e8d5a3' }}
             >
-              Ancestry Feat
+              Ancestry Feat{maxAncestryFeats > 1 ? 's' : ''}
             </Title>
             <Badge
-              className={character.selectedFeats.ancestryFeats.length > 0 ? 'badge-boost' : 'badge-muted'}
+              className={character.selectedFeats.ancestryFeats.length >= maxAncestryFeats ? 'badge-boost' : 'badge-muted'}
               size="sm"
             >
-              {character.selectedFeats.ancestryFeats.length}/1 selected
+              {character.selectedFeats.ancestryFeats.length}/{maxAncestryFeats} selected
             </Badge>
           </Group>
           {!character.ancestryId ? (
@@ -195,13 +219,13 @@ export function FeatsTab(): JSX.Element {
                 order={4}
                 style={{ fontFamily: '"Cinzel", serif', color: '#e8d5a3' }}
               >
-                Class Feat
+                Class Feat{maxClassFeats > 1 ? 's' : ''}
               </Title>
               <Badge
-                className={character.selectedFeats.classFeats.length > 0 ? 'badge-boost' : 'badge-muted'}
+                className={character.selectedFeats.classFeats.length >= maxClassFeats ? 'badge-boost' : 'badge-muted'}
                 size="sm"
               >
-                {character.selectedFeats.classFeats.length}/1 selected
+                {character.selectedFeats.classFeats.length}/{maxClassFeats} selected
               </Badge>
             </Group>
             {!character.classId ? (
@@ -225,65 +249,76 @@ export function FeatsTab(): JSX.Element {
       )}
 
       {/* General Feats */}
-      <Box style={sectionStyle}>
-        <Stack gap="md">
-          <Group justify="space-between">
-            <Title
-              order={4}
-              style={{ fontFamily: '"Cinzel", serif', color: '#e8d5a3' }}
-            >
-              General Feat
-            </Title>
-            <Badge className="badge-muted" size="sm">
-              {character.selectedFeats.generalFeats.length}/1 selected
-            </Badge>
-          </Group>
-          <Text size="sm" style={{ color: '#5c4a35' }}>
-            Most characters don't get a general feat at level 1. Versatile Humans get one as a
-            heritage benefit.
-          </Text>
-          <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
-            {generalFeats.map((feat) => (
-              <FeatCard
-                key={feat.id}
-                feat={feat}
-                selected={character.selectedFeats.generalFeats.includes(feat.id)}
-                onToggle={() => toggleGeneralFeat(feat.id)}
-              />
-            ))}
-          </SimpleGrid>
-        </Stack>
-      </Box>
+      {maxGeneralFeats > 0 && (
+        <Box style={sectionStyle}>
+          <Stack gap="md">
+            <Group justify="space-between">
+              <Title
+                order={4}
+                style={{ fontFamily: '"Cinzel", serif', color: '#e8d5a3' }}
+              >
+                General Feat{maxGeneralFeats > 1 ? 's' : ''}
+              </Title>
+              <Badge
+                className={character.selectedFeats.generalFeats.length >= maxGeneralFeats ? 'badge-boost' : 'badge-muted'}
+                size="sm"
+              >
+                {character.selectedFeats.generalFeats.length}/{maxGeneralFeats} selected
+              </Badge>
+            </Group>
+            <Text size="sm" style={{ color: '#5c4a35' }}>
+              {character.level < 3
+                ? 'General feats are available starting at level 3. Versatile Humans get one at level 1 as a heritage benefit.'
+                : 'Choose general feats to enhance your character\'s overall capabilities.'}
+            </Text>
+            <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
+              {generalFeats.map((feat) => (
+                <FeatCard
+                  key={feat.id}
+                  feat={feat}
+                  selected={character.selectedFeats.generalFeats.includes(feat.id)}
+                  onToggle={() => toggleGeneralFeat(feat.id)}
+                />
+              ))}
+            </SimpleGrid>
+          </Stack>
+        </Box>
+      )}
 
       {/* Skill Feats */}
-      <Box style={sectionStyle}>
-        <Stack gap="md">
-          <Group justify="space-between">
-            <Title
-              order={4}
-              style={{ fontFamily: '"Cinzel", serif', color: '#e8d5a3' }}
-            >
-              Skill Feat
-            </Title>
-            <Badge className="badge-muted" size="sm">
-              {character.selectedFeats.skillFeats.length}/1 selected
-            </Badge>
-          </Group>
-          <Text size="sm" style={{ color: '#5c4a35' }}>
-            Your background grants a skill feat. You may also get one from your class at level 2.
-          </Text>
-          <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
-            {skillFeats.map((feat) => (
-              <FeatCard
-                key={feat.id}
-                feat={feat}
-                selected={character.selectedFeats.skillFeats.includes(feat.id)}
-                onToggle={() => toggleSkillFeat(feat.id)}
-              />
-            ))}
-          </SimpleGrid>
-        </Stack>
-      </Box>
+      {maxSkillFeats > 0 && (
+        <Box style={sectionStyle}>
+          <Stack gap="md">
+            <Group justify="space-between">
+              <Title
+                order={4}
+                style={{ fontFamily: '"Cinzel", serif', color: '#e8d5a3' }}
+              >
+                Skill Feat{maxSkillFeats > 1 ? 's' : ''}
+              </Title>
+              <Badge
+                className={character.selectedFeats.skillFeats.length >= maxSkillFeats ? 'badge-boost' : 'badge-muted'}
+                size="sm"
+              >
+                {character.selectedFeats.skillFeats.length}/{maxSkillFeats} selected
+              </Badge>
+            </Group>
+            <Text size="sm" style={{ color: '#5c4a35' }}>
+              Your background grants a skill feat. Additional skill feats are gained as you level up.
+            </Text>
+            <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
+              {skillFeats.map((feat) => (
+                <FeatCard
+                  key={feat.id}
+                  feat={feat}
+                  selected={character.selectedFeats.skillFeats.includes(feat.id)}
+                  onToggle={() => toggleSkillFeat(feat.id)}
+                />
+              ))}
+            </SimpleGrid>
+          </Stack>
+        </Box>
+      )}
     </Stack>
   )
 }

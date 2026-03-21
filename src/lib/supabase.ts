@@ -246,6 +246,9 @@ async function _rawRefresh(): Promise<boolean> {
     // Save new tokens to localStorage — they'll be picked up after reload
     localStorage.setItem(storageKey, JSON.stringify(data))
 
+    // Stash any unsaved character data before reloading
+    stashDirtyCharacter()
+
     // Reload the page to clear orphaned Web Locks
     // This is the ONLY reliable way to fix broken Web Locks
     window.location.reload()
@@ -282,6 +285,7 @@ export function queryStarted(): void {
     activeQueryTimer = setTimeout(() => {
       if (activeQueries > 0) {
         dbg('watchdog', `${activeQueries} queries hung for 10s — Web Locks likely broken, reloading page`)
+        stashDirtyCharacter()
         window.location.reload()
       }
     }, 10000)
@@ -293,6 +297,26 @@ export function queryFinished(): void {
   if (activeQueries === 0 && activeQueryTimer) {
     clearTimeout(activeQueryTimer)
     activeQueryTimer = null
+  }
+}
+
+/**
+ * Stash unsaved character data to sessionStorage before a forced page reload.
+ * This prevents data loss when Web Locks are broken and we need to reload.
+ * The character is recovered in CharacterCreator after the reload.
+ */
+function stashDirtyCharacter(): void {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const store = (window as any).__rpfCharacterStore
+    if (!store) return
+    const { isDirty, character } = store.getState()
+    if (isDirty && character) {
+      sessionStorage.setItem('rpf-unsaved-character', JSON.stringify(character))
+      dbg('reload', 'Stashed dirty character to sessionStorage before reload')
+    }
+  } catch {
+    /* best-effort — better to reload without stash than block */
   }
 }
 

@@ -54,7 +54,12 @@ function rowToCharacter(row: CharacterRow): Character {
     ancestry: Array.isArray(rawBoosts?.ancestry) ? rawBoosts.ancestry as AbilityId[] : [],
     background: Array.isArray(rawBoosts?.background) ? rawBoosts.background as AbilityId[] : [],
     class: Array.isArray(rawBoosts?.class) ? rawBoosts.class as AbilityId[] : [],
-    free: Array.isArray(rawBoosts?.free) ? rawBoosts.free as AbilityId[] : []
+    free: Array.isArray(rawBoosts?.free) ? rawBoosts.free as AbilityId[] : [],
+    // Level-up boosts — default to [] for old characters
+    level5: Array.isArray(rawBoosts?.level5) ? rawBoosts.level5 as AbilityId[] : [],
+    level10: Array.isArray(rawBoosts?.level10) ? rawBoosts.level10 as AbilityId[] : [],
+    level15: Array.isArray(rawBoosts?.level15) ? rawBoosts.level15 as AbilityId[] : [],
+    level20: Array.isArray(rawBoosts?.level20) ? rawBoosts.level20 as AbilityId[] : [],
   }
 
   const rawFlaws = data.abilityFlaws as Record<string, unknown> | undefined
@@ -103,6 +108,7 @@ function rowToCharacter(row: CharacterRow): Character {
     selectedFeats,
     purchasedEquipment,
     goldRemaining: typeof data.goldRemaining === 'number' ? data.goldRemaining : 1500,
+    kineticistElements: Array.isArray(data.kineticistElements) ? data.kineticistElements as string[] : [],
     alignment: (data.alignment as string) ?? '',
     deity: (data.deity as string) ?? '',
     languages: Array.isArray(data.languages) ? data.languages as string[] : [],

@@ -45,6 +45,12 @@ export const classes: GameClass[] = [
       },
     ],
     isSpellcaster: false,
+    advancement: {
+      classFeatLevels: [1, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20],
+      skillFeatLevels: [2, 4, 6, 8, 10, 12, 14, 16, 18, 20],
+      generalFeatLevels: [3, 7, 11, 15, 19],
+      skillIncreaseLevels: [3, 5, 7, 9, 11, 13, 15, 17, 19],
+    },
   },
   {
     id: 'rogue',
@@ -96,6 +102,12 @@ export const classes: GameClass[] = [
       },
     ],
     isSpellcaster: false,
+    advancement: {
+      classFeatLevels: [1, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20],
+      skillFeatLevels: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
+      generalFeatLevels: [3, 7, 11, 15, 19],
+      skillIncreaseLevels: [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
+    },
   },
   {
     id: 'cleric',
@@ -146,6 +158,12 @@ export const classes: GameClass[] = [
       type: 'prepared',
       cantripsAtLevel1: 5,
       spellSlotsAtLevel1: 2,
+    },
+    advancement: {
+      classFeatLevels: [2, 4, 6, 8, 10, 12, 14, 16, 18, 20],
+      skillFeatLevels: [2, 4, 6, 8, 10, 12, 14, 16, 18, 20],
+      generalFeatLevels: [3, 7, 11, 15, 19],
+      skillIncreaseLevels: [3, 5, 7, 9, 11, 13, 15, 17, 19],
     },
   },
   {
@@ -204,6 +222,12 @@ export const classes: GameClass[] = [
       cantripsAtLevel1: 5,
       spellSlotsAtLevel1: 2,
     },
+    advancement: {
+      classFeatLevels: [2, 4, 6, 8, 10, 12, 14, 16, 18, 20],
+      skillFeatLevels: [2, 4, 6, 8, 10, 12, 14, 16, 18, 20],
+      generalFeatLevels: [3, 7, 11, 15, 19],
+      skillIncreaseLevels: [3, 5, 7, 9, 11, 13, 15, 17, 19],
+    },
   },
   {
     id: 'bard',
@@ -254,6 +278,12 @@ export const classes: GameClass[] = [
       type: 'spontaneous',
       cantripsAtLevel1: 5,
       spellSlotsAtLevel1: 2,
+    },
+    advancement: {
+      classFeatLevels: [2, 4, 6, 8, 10, 12, 14, 16, 18, 20],
+      skillFeatLevels: [2, 4, 6, 8, 10, 12, 14, 16, 18, 20],
+      generalFeatLevels: [3, 7, 11, 15, 19],
+      skillIncreaseLevels: [3, 5, 7, 9, 11, 13, 15, 17, 19],
     },
   },
   {
@@ -312,6 +342,12 @@ export const classes: GameClass[] = [
       cantripsAtLevel1: 5,
       spellSlotsAtLevel1: 2,
     },
+    advancement: {
+      classFeatLevels: [2, 4, 6, 8, 10, 12, 14, 16, 18, 20],
+      skillFeatLevels: [2, 4, 6, 8, 10, 12, 14, 16, 18, 20],
+      generalFeatLevels: [3, 7, 11, 15, 19],
+      skillIncreaseLevels: [3, 5, 7, 9, 11, 13, 15, 17, 19],
+    },
   },
   {
     id: 'ranger',
@@ -357,6 +393,12 @@ export const classes: GameClass[] = [
       },
     ],
     isSpellcaster: false,
+    advancement: {
+      classFeatLevels: [2, 4, 6, 8, 10, 12, 14, 16, 18, 20],
+      skillFeatLevels: [2, 4, 6, 8, 10, 12, 14, 16, 18, 20],
+      generalFeatLevels: [3, 7, 11, 15, 19],
+      skillIncreaseLevels: [3, 5, 7, 9, 11, 13, 15, 17, 19],
+    },
   },
   {
     id: 'witch',
@@ -413,6 +455,12 @@ export const classes: GameClass[] = [
       type: 'prepared',
       cantripsAtLevel1: 5,
       spellSlotsAtLevel1: 2,
+    },
+    advancement: {
+      classFeatLevels: [2, 4, 6, 8, 10, 12, 14, 16, 18, 20],
+      skillFeatLevels: [2, 4, 6, 8, 10, 12, 14, 16, 18, 20],
+      generalFeatLevels: [3, 7, 11, 15, 19],
+      skillIncreaseLevels: [3, 5, 7, 9, 11, 13, 15, 17, 19],
     },
   },
   {
@@ -567,5 +615,11 @@ export const classes: GameClass[] = [
       },
     ],
     isSpellcaster: false,
+    advancement: {
+      classFeatLevels: [1, 4, 6, 8, 10, 12, 14, 16, 18, 20],
+      skillFeatLevels: [2, 4, 6, 8, 10, 12, 14, 16, 18, 20],
+      generalFeatLevels: [3, 7, 11, 15, 19],
+      skillIncreaseLevels: [3, 5, 7, 9, 11, 13, 15, 17, 19],
+    },
   },
 ]

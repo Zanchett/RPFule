@@ -4,13 +4,34 @@ import {
   AbilityId,
   ALL_ABILITIES,
   ValidationResult,
-  ProficiencyRank
+  ProficiencyRank,
+  GameClass
 } from '../../src/types'
 import { ancestries } from './data/ancestries'
 import { classes } from './data/classes'
 import { backgrounds } from './data/backgrounds'
 
 const BASE_ABILITY_SCORE = 10
+
+// ── PF2e Advancement Constants (universal for all classes) ──
+export const ANCESTRY_FEAT_LEVELS = [1, 5, 9, 13, 17]
+export const ABILITY_BOOST_LEVELS = [5, 10, 15, 20] as const
+
+// Default advancement for classes that don't define one
+const DEFAULT_ADVANCEMENT = {
+  classFeatLevels: [2, 4, 6, 8, 10, 12, 14, 16, 18, 20],
+  skillFeatLevels: [2, 4, 6, 8, 10, 12, 14, 16, 18, 20],
+  generalFeatLevels: [3, 7, 11, 15, 19],
+  skillIncreaseLevels: [3, 5, 7, 9, 11, 13, 15, 17, 19],
+}
+
+export function getAdvancement(cls: GameClass | undefined) {
+  return cls?.advancement ?? DEFAULT_ADVANCEMENT
+}
+
+export function countSlotsAtLevel(levels: number[], characterLevel: number): number {
+  return levels.filter(l => l <= characterLevel).length
+}
 
 export function calculateAbilityScores(character: Character): AbilityScores {
   // If manual overrides exist, use them
@@ -39,16 +60,32 @@ export function calculateAbilityScores(character: Character): AbilityScores {
     scores[flaw] -= 2
   }
 
-  // Apply boosts (+2 each, capped at 18 for creation)
-  const allBoosts = [
+  // Apply creation boosts (+2 each, capped at 18 for creation phase)
+  const creationBoosts = [
     ...character.abilityBoosts.ancestry,
     ...character.abilityBoosts.background,
     ...character.abilityBoosts.class,
     ...character.abilityBoosts.free
   ]
 
-  for (const boost of allBoosts) {
+  for (const boost of creationBoosts) {
     if (scores[boost] < 18) {
+      scores[boost] += 2
+    }
+  }
+
+  // Apply level-up boosts (PF2e partial boost rule: +1 if score >= 18, +2 otherwise)
+  const levelUpBoosts = [
+    ...(character.abilityBoosts.level5 ?? []),
+    ...(character.abilityBoosts.level10 ?? []),
+    ...(character.abilityBoosts.level15 ?? []),
+    ...(character.abilityBoosts.level20 ?? []),
+  ]
+
+  for (const boost of levelUpBoosts) {
+    if (scores[boost] >= 18) {
+      scores[boost] += 1 // PF2e partial boost above 18
+    } else {
       scores[boost] += 2
     }
   }
@@ -286,22 +323,73 @@ export function validateCharacter(character: Character): ValidationResult[] {
     }
   }
 
-  // Feat selection warnings
-  if (character.selectedFeats.ancestryFeats.length === 0) {
+  // Feat selection warnings — dynamic slot counts from advancement table
+  const adv = getAdvancement(cls)
+  const maxAncestryFeats = countSlotsAtLevel(ANCESTRY_FEAT_LEVELS, character.level)
+  const maxClassFeats = countSlotsAtLevel(adv.classFeatLevels, character.level)
+  const maxGeneralFeats = countSlotsAtLevel(adv.generalFeatLevels, character.level)
+  const maxSkillFeats = countSlotsAtLevel(adv.skillFeatLevels, character.level)
+    + (character.backgroundId ? 1 : 0) // background grants 1 skill feat
+
+  if (character.selectedFeats.ancestryFeats.length < maxAncestryFeats) {
+    const remaining = maxAncestryFeats - character.selectedFeats.ancestryFeats.length
     results.push({
       severity: 'warning',
       field: 'feats',
-      message: 'No ancestry feat selected'
+      message: `${remaining} ancestry feat slot${remaining > 1 ? 's' : ''} remaining`
     })
   }
 
-  if (character.selectedFeats.classFeats.length === 0 && cls) {
-    // Not all classes get a feat at level 1, but Fighter does
-    if (cls.id === 'fighter' || cls.id === 'rogue') {
+  if (maxClassFeats > 0 && character.selectedFeats.classFeats.length < maxClassFeats && cls) {
+    const remaining = maxClassFeats - character.selectedFeats.classFeats.length
+    results.push({
+      severity: 'warning',
+      field: 'feats',
+      message: `${remaining} class feat slot${remaining > 1 ? 's' : ''} remaining`
+    })
+  }
+
+  if (maxGeneralFeats > 0 && character.selectedFeats.generalFeats.length < maxGeneralFeats) {
+    const remaining = maxGeneralFeats - character.selectedFeats.generalFeats.length
+    results.push({
+      severity: 'warning',
+      field: 'feats',
+      message: `${remaining} general feat slot${remaining > 1 ? 's' : ''} remaining`
+    })
+  }
+
+  if (maxSkillFeats > 0 && character.selectedFeats.skillFeats.length < maxSkillFeats) {
+    const remaining = maxSkillFeats - character.selectedFeats.skillFeats.length
+    results.push({
+      severity: 'warning',
+      field: 'feats',
+      message: `${remaining} skill feat slot${remaining > 1 ? 's' : ''} remaining`
+    })
+  }
+
+  // Level-up ability boost warnings
+  for (const lvl of ABILITY_BOOST_LEVELS) {
+    if (character.level >= lvl) {
+      const key = `level${lvl}` as keyof typeof character.abilityBoosts
+      const boosts = character.abilityBoosts[key] ?? []
+      if (boosts.length < 4) {
+        results.push({
+          severity: 'warning',
+          field: 'abilityBoosts',
+          message: `${4 - boosts.length} ability boost${4 - boosts.length > 1 ? 's' : ''} remaining at level ${lvl}`
+        })
+      }
+    }
+  }
+
+  // Kineticist element validation
+  if (cls?.id === 'kineticist') {
+    const elements = character.kineticistElements ?? []
+    if (elements.length === 0) {
       results.push({
         severity: 'warning',
-        field: 'feats',
-        message: 'No class feat selected'
+        field: 'class',
+        message: 'No kinetic elements selected — choose at least one element'
       })
     }
   }
@@ -323,7 +411,11 @@ export function createBlankCharacter(id: string): Character {
       ancestry: [],
       background: [],
       class: [],
-      free: []
+      free: [],
+      level5: [],
+      level10: [],
+      level15: [],
+      level20: [],
     },
     abilityFlaws: {
       ancestry: []
@@ -338,6 +430,7 @@ export function createBlankCharacter(id: string): Character {
     },
     purchasedEquipment: [],
     goldRemaining: 1500,
+    kineticistElements: [],
     alignment: '',
     deity: '',
     languages: [],

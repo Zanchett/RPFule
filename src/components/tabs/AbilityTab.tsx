@@ -11,9 +11,10 @@ import {
 } from '@mantine/core'
 import { useCharacterStore } from '../../stores/characterStore'
 import { ABILITY_NAMES, AbilityId, ALL_ABILITIES } from '../../types'
+import { ABILITY_BOOST_LEVELS } from '../../../game-systems/pf2e/rules'
 
 export function AbilityTab(): JSX.Element {
-  const { character, gameSystem, setFreeBoosts } = useCharacterStore()
+  const { character, gameSystem, setFreeBoosts, setLevelBoosts } = useCharacterStore()
 
   if (!character) return <></>
 
@@ -28,12 +29,28 @@ export function AbilityTab(): JSX.Element {
     }
   }
 
+  const toggleLevelBoost = (level: 5 | 10 | 15 | 20, ability: AbilityId): void => {
+    const key = `level${level}` as keyof typeof character.abilityBoosts
+    const current = (character.abilityBoosts[key] ?? []) as AbilityId[]
+    if (current.includes(ability)) {
+      setLevelBoosts(level, current.filter((b) => b !== ability))
+    } else if (current.length < 4) {
+      setLevelBoosts(level, [...current, ability])
+    }
+  }
+
   const allBoostSources = (ability: AbilityId): string[] => {
     const sources: string[] = []
     if (character.abilityBoosts.ancestry.includes(ability)) sources.push('Ancestry')
     if (character.abilityBoosts.background.includes(ability)) sources.push('Background')
     if (character.abilityBoosts.class.includes(ability)) sources.push('Class')
     if (character.abilityBoosts.free.includes(ability)) sources.push('Free')
+    for (const lvl of ABILITY_BOOST_LEVELS) {
+      const key = `level${lvl}` as keyof typeof character.abilityBoosts
+      if ((character.abilityBoosts[key] as AbilityId[] | undefined)?.includes(ability)) {
+        sources.push(`Level ${lvl}`)
+      }
+    }
     return sources
   }
 
@@ -97,6 +114,48 @@ export function AbilityTab(): JSX.Element {
           </Group>
         </Stack>
       </Box>
+
+      {ABILITY_BOOST_LEVELS.filter((lvl) => character.level >= lvl).map((lvl) => {
+        const key = `level${lvl}` as keyof typeof character.abilityBoosts
+        const boosts = (character.abilityBoosts[key] ?? []) as AbilityId[]
+        return (
+          <Box key={lvl} style={sectionStyle}>
+            <Stack gap="md">
+              <Group justify="space-between">
+                <Title
+                  order={5}
+                  style={{ fontFamily: '"Cinzel", serif', color: '#e8d5a3' }}
+                >
+                  Level {lvl} Ability Boosts
+                </Title>
+                <Badge
+                  className={boosts.length >= 4 ? 'badge-boost' : 'badge-muted'}
+                  size="sm"
+                >
+                  {boosts.length}/4
+                </Badge>
+              </Group>
+              <Text size="sm" style={{ color: '#5c4a35' }}>
+                Choose 4 abilities to boost at level {lvl}. Abilities at 18+ gain +1 instead of +2.
+              </Text>
+              <Group gap="md">
+                {ALL_ABILITIES.map((ability) => (
+                  <Checkbox
+                    key={ability}
+                    label={ABILITY_NAMES[ability]}
+                    checked={boosts.includes(ability)}
+                    onChange={() => toggleLevelBoost(lvl as 5 | 10 | 15 | 20, ability)}
+                    disabled={
+                      !boosts.includes(ability) &&
+                      boosts.length >= 4
+                    }
+                  />
+                ))}
+              </Group>
+            </Stack>
+          </Box>
+        )
+      })}
 
       <SimpleGrid cols={{ base: 2, sm: 3, md: 6 }} spacing="md">
         {ALL_ABILITIES.map((ability) => {
