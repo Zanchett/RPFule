@@ -5,7 +5,8 @@ import {
   ALL_ABILITIES,
   ValidationResult,
   ProficiencyRank,
-  GameClass
+  GameClass,
+  Feat
 } from '../../src/types'
 import { ancestries } from './data/ancestries'
 import { classes } from './data/classes'
@@ -451,4 +452,153 @@ export function createBlankCharacter(id: string): Character {
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   }
+}
+
+// ── Feat Prerequisite Checking ──
+
+const ABILITY_NAME_TO_ID: Record<string, AbilityId> = {
+  'Strength': 'str', 'Dexterity': 'dex', 'Constitution': 'con',
+  'Intelligence': 'int', 'Wisdom': 'wis', 'Charisma': 'cha'
+}
+
+const ELEMENT_NAMES = ['Air', 'Earth', 'Fire', 'Metal', 'Water', 'Wood']
+
+const PROF_RANKS: ProficiencyRank[] = ['untrained', 'trained', 'expert', 'master', 'legendary']
+
+function profRankAtLeast(have: ProficiencyRank, need: ProficiencyRank): boolean {
+  return PROF_RANKS.indexOf(have) >= PROF_RANKS.indexOf(need)
+}
+
+/**
+ * Check whether a single prerequisite clause is satisfied.
+ * Returns { met: true } if satisfied or unparseable (never wrongly lock).
+ */
+function checkSinglePrereq(
+  prereq: string,
+  character: Character,
+  allFeats: Feat[],
+  scores: AbilityScores
+): { met: boolean; reason?: string } {
+  const p = prereq.trim()
+  if (!p) return { met: true }
+
+  // 1. Element prerequisite: "Air element", "Fire element", etc.
+  const singleElementMatch = p.match(/^(Air|Earth|Fire|Metal|Water|Wood) element$/)
+  if (singleElementMatch) {
+    const el = singleElementMatch[1].toLowerCase()
+    const has = (character.kineticistElements ?? []).includes(el)
+    return has ? { met: true } : { met: false, reason: `Requires ${p}` }
+  }
+
+  // 2. Multi-element: "Air and Fire elements", "Earth and Water elements"
+  const multiElementMatch = p.match(/^(Air|Earth|Fire|Metal|Water|Wood) and (Air|Earth|Fire|Metal|Water|Wood) elements$/)
+  if (multiElementMatch) {
+    const els = character.kineticistElements ?? []
+    const has1 = els.includes(multiElementMatch[1].toLowerCase())
+    const has2 = els.includes(multiElementMatch[2].toLowerCase())
+    if (has1 && has2) return { met: true }
+    const missing: string[] = []
+    if (!has1) missing.push(multiElementMatch[1])
+    if (!has2) missing.push(multiElementMatch[2])
+    return { met: false, reason: `Requires ${missing.join(' and ')} element${missing.length > 1 ? 's' : ''}` }
+  }
+
+  // 3. "Two or more kinetic elements"
+  if (p === 'Two or more kinetic elements') {
+    const has = (character.kineticistElements ?? []).length >= 2
+    return has ? { met: true } : { met: false, reason: 'Requires two or more kinetic elements' }
+  }
+
+  // 4. Ability score: "Constitution 14", "Dexterity 14", "Charisma 16"
+  const abilityMatch = p.match(/^(Strength|Dexterity|Constitution|Intelligence|Wisdom|Charisma)\s+(\d+)$/)
+  if (abilityMatch) {
+    const abilityId = ABILITY_NAME_TO_ID[abilityMatch[1]]
+    const required = parseInt(abilityMatch[2], 10)
+    const has = scores[abilityId] >= required
+    return has ? { met: true } : { met: false, reason: `Requires ${p} (have ${scores[abilityId]})` }
+  }
+
+  // 5. Proficiency: "trained in Crafting", "master in Perception", "legendary in Diplomacy"
+  const profMatch = p.match(/^(trained|expert|master|legendary) in (.+)$/)
+  if (profMatch) {
+    const needRank = profMatch[1] as ProficiencyRank
+    const skillOrAbility = profMatch[2]
+
+    // Check Perception (class proficiency)
+    if (skillOrAbility === 'Perception') {
+      const cls = classes.find(c => c.id === character.classId)
+      if (cls && profRankAtLeast(cls.perception, needRank)) return { met: true }
+      return { met: false, reason: `Requires ${p}` }
+    }
+
+    // For "trained in X" — check if the skill is in skillTraining
+    if (needRank === 'trained') {
+      // Normalize: skill training stores skill ids in lowercase
+      const hasSkill = character.skillTraining.some(s =>
+        s.toLowerCase() === skillOrAbility.toLowerCase()
+      )
+      if (hasSkill) return { met: true }
+      // Also check class auto-trained skills
+      const cls = classes.find(c => c.id === character.classId)
+      if (cls?.skills.trained.some(s => s.toLowerCase() === skillOrAbility.toLowerCase())) {
+        return { met: true }
+      }
+      return { met: false, reason: `Requires ${p}` }
+    }
+
+    // For expert/master/legendary proficiency — we can't fully track skill rank progression yet
+    // Default to allowing it (don't wrongly lock)
+    return { met: true }
+  }
+
+  // 6. Feat prerequisite: check if a feat with that name is selected
+  //    Match by feat name in allFeats, then check if its id is in selectedFeats
+  const matchingFeat = allFeats.find(f => f.name === p)
+  if (matchingFeat) {
+    const allSelected = [
+      ...character.selectedFeats.ancestryFeats,
+      ...character.selectedFeats.classFeats,
+      ...character.selectedFeats.generalFeats,
+      ...character.selectedFeats.skillFeats
+    ]
+    const has = allSelected.includes(matchingFeat.id)
+    return has ? { met: true } : { met: false, reason: `Requires ${p} (not selected)` }
+  }
+
+  // 7. Unparseable — default to met (never wrongly lock the player out)
+  return { met: true }
+}
+
+/**
+ * Check all prerequisites for a feat. Handles semicolon-separated and
+ * comma-separated lists. Returns { met, reason } where reason describes
+ * the first unmet prerequisite.
+ */
+export function checkFeatPrerequisites(
+  feat: Feat,
+  character: Character,
+  allFeats: Feat[]
+): { met: boolean; reason?: string } {
+  if (!feat.prerequisites) return { met: true }
+
+  const scores = calculateAbilityScores(character)
+
+  // Split on semicolons first (e.g. "Form Control; Wild Shape")
+  // Then also split comma-separated items that aren't part of a feat name
+  const parts = feat.prerequisites
+    .split(/;\s*/)
+    .flatMap(part => {
+      // Don't split "trained in Arcana, Nature, Occultism, or Religion" — that's one clause
+      if (part.match(/^(trained|expert|master|legendary) in /)) return [part]
+      // Don't split "Warden's Boon, Double Prey" — those are separate feat prereqs
+      // Only split on ", " when each part looks like a feat name
+      return part.split(/,\s*/)
+    })
+
+  for (const part of parts) {
+    const result = checkSinglePrereq(part, character, allFeats, scores)
+    if (!result.met) return result
+  }
+
+  return { met: true }
 }

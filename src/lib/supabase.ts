@@ -301,9 +301,9 @@ export function queryFinished(): void {
 }
 
 /**
- * Stash unsaved character data to sessionStorage before a forced page reload.
- * This prevents data loss when Web Locks are broken and we need to reload.
- * The character is recovered in CharacterCreator after the reload.
+ * Stash unsaved character data to localStorage before a forced page reload.
+ * Uses localStorage (not sessionStorage) so it survives across sessions.
+ * The character is recovered in characterStore.loadCharacter() on next load.
  */
 function stashDirtyCharacter(): void {
   try {
@@ -312,8 +312,8 @@ function stashDirtyCharacter(): void {
     if (!store) return
     const { isDirty, character } = store.getState()
     if (isDirty && character) {
-      sessionStorage.setItem('rpf-unsaved-character', JSON.stringify(character))
-      dbg('reload', 'Stashed dirty character to sessionStorage before reload')
+      localStorage.setItem('rpf-local-backup-' + character.id, JSON.stringify(character))
+      dbg('reload', 'Stashed dirty character to localStorage before reload')
     }
   } catch {
     /* best-effort — better to reload without stash than block */

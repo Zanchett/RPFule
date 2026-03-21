@@ -42,19 +42,8 @@ export function CharacterCreator(): JSX.Element {
 
   useEffect(() => {
     if (id && character?.id !== id) {
-      loadCharacter(id).then(() => {
-        // Recover character stashed by forced reload (Web Locks fix)
-        const stashed = sessionStorage.getItem('rpf-unsaved-character')
-        if (stashed) {
-          try {
-            const parsed = JSON.parse(stashed)
-            if (parsed && parsed.id === id) {
-              useCharacterStore.setState({ character: parsed, isDirty: true })
-            }
-          } catch { /* ignore corrupt stash */ }
-          sessionStorage.removeItem('rpf-unsaved-character')
-        }
-      })
+      // loadCharacter() automatically checks for localStorage backup from failed saves
+      loadCharacter(id)
     }
   }, [id, character?.id, loadCharacter])
 

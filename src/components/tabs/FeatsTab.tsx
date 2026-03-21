@@ -1,34 +1,39 @@
 import { Box, Title, Text, Stack, SimpleGrid, Badge, Group, Alert } from '@mantine/core'
 import { useCharacterStore } from '../../stores/characterStore'
 import { Feat } from '../../types'
-import { getAdvancement, countSlotsAtLevel, ANCESTRY_FEAT_LEVELS } from '../../../game-systems/pf2e/rules'
+import { getAdvancement, countSlotsAtLevel, ANCESTRY_FEAT_LEVELS, checkFeatPrerequisites } from '../../../game-systems/pf2e/rules'
 
 function FeatCard({
   feat,
   selected,
-  onToggle
+  onToggle,
+  locked,
+  lockReason
 }: {
   feat: Feat
   selected: boolean
   onToggle: () => void
+  locked?: boolean
+  lockReason?: string
 }): JSX.Element {
   return (
     <Box
       className={`feat-item ${selected ? 'selected' : ''}`}
-      onClick={onToggle}
+      onClick={locked && !selected ? undefined : onToggle}
+      style={locked && !selected ? { opacity: 0.45, cursor: 'not-allowed' } : undefined}
     >
       <Stack gap="xs">
         <Group justify="space-between">
           <Group gap="sm">
-            <Text style={{ color: '#d4a843', fontSize: 12 }}>
-              {selected ? '✦' : '◇'}
+            <Text style={{ color: locked && !selected ? '#5c4a35' : '#d4a843', fontSize: 12 }}>
+              {locked && !selected ? '🔒' : selected ? '✦' : '◇'}
             </Text>
             <Text
               fw={600}
               size="sm"
               style={{
                 fontFamily: '"Cinzel", serif',
-                color: selected ? '#f0c75e' : '#e8d5a3'
+                color: locked && !selected ? '#6b5a42' : selected ? '#f0c75e' : '#e8d5a3'
               }}
             >
               {feat.name}
@@ -41,7 +46,7 @@ function FeatCard({
         <Text
           size="sm"
           style={{
-            color: '#8b7355',
+            color: locked && !selected ? '#5c4a35' : '#8b7355',
             fontFamily: '"Crimson Text", serif',
             lineHeight: 1.5
           }}
@@ -49,8 +54,8 @@ function FeatCard({
           {feat.description}
         </Text>
         {feat.prerequisites && (
-          <Text size="xs" style={{ color: '#d4a843', fontStyle: 'italic' }}>
-            Requires: {feat.prerequisites}
+          <Text size="xs" style={{ color: locked && !selected ? '#a04040' : '#d4a843', fontStyle: 'italic' }}>
+            {locked && !selected ? `🔒 ${lockReason || `Requires: ${feat.prerequisites}`}` : `Requires: ${feat.prerequisites}`}
           </Text>
         )}
         {feat.rarity && feat.rarity !== 'common' && (
@@ -118,13 +123,26 @@ export function FeatsTab(): JSX.Element {
     maxLevel: character.level
   })
 
+  // Collect all feats for prerequisite checking (need to look up feat names → ids)
+  const allFeats = gameSystem.getFeats({})
+
+  // Helper: check prerequisites for a feat
+  const prereqCheck = (feat: Feat) => checkFeatPrerequisites(feat, character, allFeats)
+
   const hasClassFeatSlot = maxClassFeats > 0
+
+  // Helper: check if feat prerequisites are met before allowing selection
+  const canSelectFeat = (featId: string): boolean => {
+    const feat = allFeats.find(f => f.id === featId)
+    if (!feat) return true
+    return checkFeatPrerequisites(feat, character, allFeats).met
+  }
 
   const toggleAncestryFeat = (featId: string): void => {
     const current = character.selectedFeats.ancestryFeats
     if (current.includes(featId)) {
       setAncestryFeats(current.filter((f) => f !== featId))
-    } else if (current.length < maxAncestryFeats) {
+    } else if (current.length < maxAncestryFeats && canSelectFeat(featId)) {
       setAncestryFeats([...current, featId])
     }
   }
@@ -133,7 +151,7 @@ export function FeatsTab(): JSX.Element {
     const current = character.selectedFeats.classFeats
     if (current.includes(featId)) {
       setClassFeats(current.filter((f) => f !== featId))
-    } else if (current.length < maxClassFeats) {
+    } else if (current.length < maxClassFeats && canSelectFeat(featId)) {
       setClassFeats([...current, featId])
     }
   }
@@ -142,7 +160,7 @@ export function FeatsTab(): JSX.Element {
     const current = character.selectedFeats.generalFeats
     if (current.includes(featId)) {
       setGeneralFeats(current.filter((f) => f !== featId))
-    } else if (current.length < maxGeneralFeats) {
+    } else if (current.length < maxGeneralFeats && canSelectFeat(featId)) {
       setGeneralFeats([...current, featId])
     }
   }
@@ -151,7 +169,7 @@ export function FeatsTab(): JSX.Element {
     const current = character.selectedFeats.skillFeats
     if (current.includes(featId)) {
       setSkillFeats(current.filter((f) => f !== featId))
-    } else if (current.length < maxSkillFeats) {
+    } else if (current.length < maxSkillFeats && canSelectFeat(featId)) {
       setSkillFeats([...current, featId])
     }
   }
@@ -197,14 +215,19 @@ export function FeatsTab(): JSX.Element {
             </Alert>
           ) : (
             <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
-              {ancestryFeats.map((feat) => (
-                <FeatCard
-                  key={feat.id}
-                  feat={feat}
-                  selected={character.selectedFeats.ancestryFeats.includes(feat.id)}
-                  onToggle={() => toggleAncestryFeat(feat.id)}
-                />
-              ))}
+              {ancestryFeats.map((feat) => {
+                const check = prereqCheck(feat)
+                return (
+                  <FeatCard
+                    key={feat.id}
+                    feat={feat}
+                    selected={character.selectedFeats.ancestryFeats.includes(feat.id)}
+                    onToggle={() => toggleAncestryFeat(feat.id)}
+                    locked={!check.met}
+                    lockReason={check.reason}
+                  />
+                )
+              })}
             </SimpleGrid>
           )}
         </Stack>
@@ -234,14 +257,19 @@ export function FeatsTab(): JSX.Element {
               </Alert>
             ) : (
               <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
-                {classFeats.map((feat) => (
-                  <FeatCard
-                    key={feat.id}
-                    feat={feat}
-                    selected={character.selectedFeats.classFeats.includes(feat.id)}
-                    onToggle={() => toggleClassFeat(feat.id)}
-                  />
-                ))}
+                {classFeats.map((feat) => {
+                  const check = prereqCheck(feat)
+                  return (
+                    <FeatCard
+                      key={feat.id}
+                      feat={feat}
+                      selected={character.selectedFeats.classFeats.includes(feat.id)}
+                      onToggle={() => toggleClassFeat(feat.id)}
+                      locked={!check.met}
+                      lockReason={check.reason}
+                    />
+                  )
+                })}
               </SimpleGrid>
             )}
           </Stack>
@@ -272,14 +300,19 @@ export function FeatsTab(): JSX.Element {
                 : 'Choose general feats to enhance your character\'s overall capabilities.'}
             </Text>
             <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
-              {generalFeats.map((feat) => (
-                <FeatCard
-                  key={feat.id}
-                  feat={feat}
-                  selected={character.selectedFeats.generalFeats.includes(feat.id)}
-                  onToggle={() => toggleGeneralFeat(feat.id)}
-                />
-              ))}
+              {generalFeats.map((feat) => {
+                const check = prereqCheck(feat)
+                return (
+                  <FeatCard
+                    key={feat.id}
+                    feat={feat}
+                    selected={character.selectedFeats.generalFeats.includes(feat.id)}
+                    onToggle={() => toggleGeneralFeat(feat.id)}
+                    locked={!check.met}
+                    lockReason={check.reason}
+                  />
+                )
+              })}
             </SimpleGrid>
           </Stack>
         </Box>
@@ -307,14 +340,19 @@ export function FeatsTab(): JSX.Element {
               Your background grants a skill feat. Additional skill feats are gained as you level up.
             </Text>
             <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
-              {skillFeats.map((feat) => (
-                <FeatCard
-                  key={feat.id}
-                  feat={feat}
-                  selected={character.selectedFeats.skillFeats.includes(feat.id)}
-                  onToggle={() => toggleSkillFeat(feat.id)}
-                />
-              ))}
+              {skillFeats.map((feat) => {
+                const check = prereqCheck(feat)
+                return (
+                  <FeatCard
+                    key={feat.id}
+                    feat={feat}
+                    selected={character.selectedFeats.skillFeats.includes(feat.id)}
+                    onToggle={() => toggleSkillFeat(feat.id)}
+                    locked={!check.met}
+                    lockReason={check.reason}
+                  />
+                )
+              })}
             </SimpleGrid>
           </Stack>
         </Box>

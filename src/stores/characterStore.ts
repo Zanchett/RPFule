@@ -191,12 +191,31 @@ export const useCharacterStore = create<CharacterStore>((set, get) => ({
         migrated.currentHP = system.calculateHP(migrated)
       }
 
+      // Check for localStorage backup from a previous failed save
+      let finalCharacter = migrated
+      let restoreAsDirty = false
+      try {
+        const localBackup = localStorage.getItem('rpf-local-backup-' + id)
+        if (localBackup) {
+          const parsed = JSON.parse(localBackup)
+          if (parsed && parsed.id === id && parsed.updatedAt > migrated.updatedAt) {
+            dbg('char', 'loadCharacter: restoring newer local backup')
+            finalCharacter = parsed
+            restoreAsDirty = true
+          }
+          // Clear stale backup if Supabase is newer or same
+          if (!restoreAsDirty) {
+            localStorage.removeItem('rpf-local-backup-' + id)
+          }
+        }
+      } catch { /* ignore corrupt backup */ }
+
       dbg('char', `loadCharacter: DONE OK (${Date.now() - t0}ms)`)
       suppressDirty = true
       set({
-        character: migrated,
+        character: finalCharacter,
         gameSystem: system,
-        isDirty: false,
+        isDirty: restoreAsDirty,
         characterLoading: false,
         characterError: null
       })
@@ -234,11 +253,18 @@ export const useCharacterStore = create<CharacterStore>((set, get) => ({
         const { saveStatus } = get()
         if (saveStatus === 'saved') set({ saveStatus: 'idle' })
       }, 3000)
+      // Clear localStorage backup on successful save
+      try { localStorage.removeItem('rpf-local-backup-' + updated.id) } catch { /* */ }
     } catch (err) {
       suppressDirty = false
       const message = err instanceof Error ? err.message : 'Save failed'
       dbg('char', `saveCharacter: FAILED — ${message}`, err)
       set({ saveStatus: 'error', saveError: message })
+      // Persist to localStorage so the character survives tab close / reload
+      try {
+        localStorage.setItem('rpf-local-backup-' + updated.id, JSON.stringify(updated))
+        dbg('char', 'saveCharacter: backed up to localStorage')
+      } catch { /* storage full or unavailable */ }
     }
   },
 
