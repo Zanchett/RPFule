@@ -114,6 +114,7 @@ export function EquipmentTab(): JSX.Element {
 
   const allEquipment = gameSystem.getEquipment()
 
+  // Only show mundane equipment in character creation — magic items are DM shop-only
   const categories: { key: EquipmentCategory; label: string }[] = [
     { key: 'weapon', label: 'Weapons' },
     { key: 'armor', label: 'Armor' },
@@ -121,13 +122,6 @@ export function EquipmentTab(): JSX.Element {
     { key: 'gear', label: 'Gear' },
     { key: 'kit', label: 'Kits' },
     { key: 'tool', label: 'Tools' },
-    { key: 'potion', label: 'Potions' },
-    { key: 'scroll', label: 'Scrolls' },
-    { key: 'wand', label: 'Wands' },
-    { key: 'consumable', label: 'Consumables' },
-    { key: 'worn', label: 'Worn Items' },
-    { key: 'held', label: 'Held Items' },
-    { key: 'talisman', label: 'Talismans' }
   ]
 
   const purchasedItems = character.purchasedEquipment.map((p) => ({
