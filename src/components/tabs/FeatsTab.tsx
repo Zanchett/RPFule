@@ -88,7 +88,16 @@ export function FeatsTab(): JSX.Element {
   const maxClassFeats = countSlotsAtLevel(adv.classFeatLevels, character.level)
   const maxGeneralFeats = countSlotsAtLevel(adv.generalFeatLevels, character.level)
   const maxSkillFeats = countSlotsAtLevel(adv.skillFeatLevels, character.level)
-    + (character.backgroundId ? 1 : 0) // background grants 1 skill feat
+  // Background grants a SPECIFIC skill feat — it's separate, not a choosable slot
+
+  // Resolve the background's granted skill feat by name
+  const backgrounds = gameSystem.getBackgrounds()
+  const selectedBackground = backgrounds.find(b => b.id === character.backgroundId)
+  const allSkillFeats = gameSystem.getFeats({ type: 'skill', maxLevel: 20 })
+  const backgroundGrantedFeat = selectedBackground
+    ? allSkillFeats.find(f => f.name === selectedBackground.skillFeat
+        || selectedBackground.skillFeat.startsWith(f.name + ' ('))
+    : undefined
 
   // Get feats filtered by character's selections
   const ancestryFeats = gameSystem.getFeats({
@@ -318,7 +327,63 @@ export function FeatsTab(): JSX.Element {
         </Box>
       )}
 
-      {/* Skill Feats */}
+      {/* Background Granted Skill Feat */}
+      {backgroundGrantedFeat && (
+        <Box style={sectionStyle}>
+          <Stack gap="md">
+            <Group justify="space-between">
+              <Title
+                order={4}
+                style={{ fontFamily: '"Cinzel", serif', color: '#e8d5a3' }}
+              >
+                Background Skill Feat
+              </Title>
+              <Badge className="badge-boost" size="sm">
+                Granted by {selectedBackground?.name ?? 'Background'}
+              </Badge>
+            </Group>
+            <Text size="sm" style={{ color: '#5c4a35' }}>
+              Your background automatically grants you this skill feat.
+            </Text>
+            <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
+              <Box className="feat-item selected" style={{ borderColor: '#6b8a3e' }}>
+                <Stack gap="xs">
+                  <Group justify="space-between">
+                    <Group gap="sm">
+                      <Text style={{ color: '#6b8a3e', fontSize: 12 }}>✦</Text>
+                      <Text
+                        fw={600}
+                        size="sm"
+                        style={{
+                          fontFamily: '"Cinzel", serif',
+                          color: '#f0c75e'
+                        }}
+                      >
+                        {selectedBackground?.skillFeat ?? backgroundGrantedFeat.name}
+                      </Text>
+                    </Group>
+                    <Badge className="badge-muted" size="xs">
+                      Level {backgroundGrantedFeat.level}
+                    </Badge>
+                  </Group>
+                  <Text
+                    size="sm"
+                    style={{
+                      color: '#8b7355',
+                      fontFamily: '"Crimson Text", serif',
+                      lineHeight: 1.5
+                    }}
+                  >
+                    {backgroundGrantedFeat.description}
+                  </Text>
+                </Stack>
+              </Box>
+            </SimpleGrid>
+          </Stack>
+        </Box>
+      )}
+
+      {/* Skill Feats (from class advancement) */}
       {maxSkillFeats > 0 && (
         <Box style={sectionStyle}>
           <Stack gap="md">
@@ -337,7 +402,9 @@ export function FeatsTab(): JSX.Element {
               </Badge>
             </Group>
             <Text size="sm" style={{ color: '#5c4a35' }}>
-              Your background grants a skill feat. Additional skill feats are gained as you level up.
+              {maxSkillFeats > 0
+                ? 'Choose skill feats gained from your class advancement.'
+                : 'You do not have any additional skill feat slots from class advancement yet.'}
             </Text>
             <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
               {skillFeats.map((feat) => {
